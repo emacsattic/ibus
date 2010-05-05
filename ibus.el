@@ -6,7 +6,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.0.1.1")
+(defconst ibus-mode-version "0.0.1.2")
 
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the GNU General Public License as
@@ -75,7 +75,7 @@
 
 (defvar ibus-agent-buffer-name " *iBus*")
 
-(defvar ibus-agent-command "/usr/share/pyshared/ibus-mode/ibus-agent.py")
+(defvar ibus-agent-command "/usr/share/pyshared/ibus-mode/ibus-mode-agent.py")
 (defvar ibus-python-command nil)
 
 (defvar ibus-agent-timeout 3.0)
