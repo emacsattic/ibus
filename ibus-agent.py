@@ -1,5 +1,7 @@
-#! /usr/bin/python
+#! /usr/bin/env python
 # -*- coding: utf-8 -*-
+
+# Version 0.0.1.1
 
 import sys
 import glib
@@ -48,8 +50,13 @@ class IBusAgentIMContext(ibus.InputContext):
         print '(ibus-commit-text-cb %d "%s")'%(ic.id_no, text.text.encode("utf-8"))
 
     def __update_preedit_text_cb(self, ic, text, cursor_pos, visible):
-        print '(ibus-update-preedit-text-cb %d "%s" %d %s)'% \
-            (ic.id_no, text.text.encode("utf-8"), cursor_pos, lisp_boolean(visible))
+        attrs = ['%s %d %d %d'%
+                 (["nil", "'underline", "'foreground", "'background"][attr.type],
+                  attr.value & 0xffffff, attr.start_index, attr.end_index)
+                 for attr in text.attributes]
+        print '(ibus-update-preedit-text-cb %d "%s" %d %s %s)'% \
+            (ic.id_no, text.text.encode("utf-8"),
+             cursor_pos, lisp_boolean(visible), ' '.join(attrs))
 
     def __show_preedit_text_cb(self, ic):
         print '(ibus-show-preedit-text-cb %d)'%(ic.id_no)

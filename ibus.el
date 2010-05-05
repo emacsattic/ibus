@@ -6,7 +6,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.0.1")
+(defconst ibus-mode-version "0.0.1.1")
 
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the GNU General Public License as
@@ -122,6 +122,10 @@
 (defvar ibus-preedit-text "")
 (make-variable-buffer-local 'ibus-preedit-text)
 (put 'ibus-preedit-text 'permanent-local t)
+
+(defvar ibus-preedit-attrs nil)
+(make-variable-buffer-local 'ibus-preedit-attrs)
+(put 'ibus-preedit-attrs 'permanent-local t)
 
 (defvar ibus-auxiliary-text "")
 (make-variable-buffer-local 'ibus-auxiliary-text)
@@ -247,16 +251,19 @@
 	      (msec (and (integerp ibus-agent-timeout) ibus-agent-timeout)))
 	  (when (= (point-max) 1)
 	    (accept-process-output ibus-agent-process sec msec t))
+	  (ibus-log "receive:\n%s" (buffer-substring (point-min) (point-max)))
 	  (goto-char (point-min))
 	  (while (let ((pos (point)))
 		   (condition-case err
 		       (push (read (current-buffer)) repl)
 		     (end-of-file
 		      (goto-char pos)
+		      nil)
+		     (invalid-read-syntax
+		      (goto-char (point-max))
 		      nil))))
 	  (delete-region (point-min) (point))
 	  (setq repl (nreverse repl))
-	  (ibus-log "receive:\n%s" repl)
 	  (setq unread-command-events
 		(delq 'ibus-receive-event
 		      (delq 'ibus-dummy-event unread-command-events))))
@@ -329,8 +336,9 @@
   (overlay-put ibus-preedit-overlay 'before-string
 	       (propertize ibus-preedit-text 'face 'underline)))
 
-(defun ibus-update-preedit-text-cb (ic text cursor-pos visible)
-  (setq ibus-preedit-text text)
+(defun ibus-update-preedit-text-cb (ic text cursor-pos visible &rest attrs)
+  (setq ibus-preedit-text text
+	ibus-preedit-attrs attrs)
   (if visible
       (ibus-show-preedit-text-cb ic)
     (ibus-hide-preedit-text-cb ic)))
