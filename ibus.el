@@ -6,7 +6,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.0.1.3")
+(defconst ibus-mode-version "0.0.2")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -79,6 +79,10 @@
 ;;
 
 ;;; History:
+;; 2010-05-09  S. Irie
+;;         * Version 0.0.2
+;;         * Imported many functions from scim-bridge.el
+;;
 ;; 2010-04-12  S. Irie
 ;;         * Version 0.0.1
 ;;         * Initial experimental version
