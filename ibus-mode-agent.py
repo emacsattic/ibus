@@ -1,11 +1,54 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# Version 0.0.1.2
+# ibus-mode-agent.py --- helper program of iBus client for GNU Emacs
+# Copyright (c) 2009 and onwards, S. Irie
+
+# Author: S. Irie
+# Maintainer: S. Irie
+# Version: 0.0.1.3
+
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+# Commentary:
+
+# iBus is a new input method framework under active development
+# which is designed to overcome the limitations of SCIM.
+
+# iBus uses D-Bus protocol for communication between the ibus-daemon
+# and clients (engines, panel, config tools). Since the components
+# run in separate processes there is enhanced modularity and stability.
+# Client processes can be loaded, started and stopped independently.
+# iBus supports Gtk2 and XIM, and has input method engines for anthy,
+# chewing, hangul, m17n, pinyin, rawcode, and large tables. Engines
+# and clients can be written in any language with a dbus binding.
+
+# This program is iBus client for GNU Emacs. It is, however,
+# not part of official iBus distribution.
+
+# ChangeLog:
+
+# 2010-04-12
+#        * Version 0.0.1
+#        * Initial experimental version
+
+# Code:
 
 import sys
 import glib
 import ibus
+from ibus import modifier
 
 # D-Bus
 
@@ -82,32 +125,33 @@ class IBusAgentIMContext(ibus.InputContext):
             self.__hide_lookup_table_cb(ic)
 
     def __show_lookup_table_cb(self, ic):
-        print "(ibus-show-lookup-table-cb %d '(%s))"% \
+        print "(ibus-show-lookup-table-cb %d '(%s) %s)"% \
             (ic.id_no,
              " ".join(map(lambda item : '"%s"'%item.text,
                           ic.lookup_table.get_candidates_in_current_page())
-                      ).encode("utf-8"))
+                      ).encode("utf-8"),
+             ic.lookup_table.get_cursor_pos_in_current_page())
 
     def __hide_lookup_table_cb(self, ic):
         print '(ibus-hide-lookup-table-cb %d)'%(ic.id_no)
 
     def __page_up_lookup_table_cb(self, ic):
-        pass
+        print '(ibus-log "page up lookup table")'
 
     def __page_down_lookup_table_cb(self, ic):
-        pass
+        print '(ibus-log "page down lookup table")'
 
     def __cursor_up_lookup_table_cb(self, ic):
-        pass
+        print '(ibus-log "cursor up lookup table")'
 
     def __cursor_down_lookup_table_cb(self, ic):
-        pass
+        print '(ibus-log "cursor down lookup table")'
 
     def __enabled_cb(self, ic):
-        print '(set-cursor-color "red")'
+        print '(ibus-enabled-cb %d "%s")'%(ic.id_no, ic.get_engine().name)
 
     def __disabled_cb(self, ic):
-        print "(set-cursor-color (frame-parameter nil 'foreground-color))"
+        print '(ibus-disabled-cb %d)'%ic.id_no
 
 
 # Process methods from client
@@ -125,9 +169,34 @@ def destroy_imcontext(id_no):
     imcontexts[id_no].destroy()
     imcontexts[id_no] = None
 
-def process_key_event(id_no, keyval, keycode, modifier_mask):
-    handled = imcontexts[id_no].process_key_event(keyval, keycode, modifier_mask)
+def process_key_event(id_no, keyval, keycode, modifier_mask, pressed):
+    if pressed:
+        mask = modifier_mask
+    else:
+        mask = modifier_mask & modifier.RELEASE_MASK
+    handled = imcontexts[id_no].process_key_event(keyval, keycode, mask)
     print "(ibus-process-key-event-cb %d %s)"%(id_no, lisp_boolean(handled))
+
+def set_cursor_location(id_no, x, y, w, h):
+    imcontexts[id_no].set_cursor_location(x, y, w, h)
+
+def focus_in(id_no):
+    imcontexts[id_no].focus_in()
+
+def focus_out(id_no):
+    imcontexts[id_no].focus_out()
+
+def reset(id_no):
+    print ';(ibus-log "reset: %r")'%imcontexts[id_no].reset()
+
+def enable(id_no):
+    imcontexts[id_no].enable()
+
+def disable(id_no):
+    imcontexts[id_no].disable()
+
+def get_engine(id_no):
+    print ';(ibus-log "get_engine: %s")'%imcontexts[id_no].get_engine().name
 
 # Main loop
 
