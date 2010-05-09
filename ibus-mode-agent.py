@@ -55,7 +55,6 @@ from ibus import modifier
 # D-Bus
 
 bus = ibus.Bus()
-path = bus.create_input_context("IBusAgentIMContext")
 
 # Miscellaneous functions
 
@@ -67,7 +66,8 @@ def lisp_boolean(boolean):
 class IBusAgentIMContext(ibus.InputContext):
 
     def __init__(self):
-        super(IBusAgentIMContext, self).__init__(bus, path, True)
+        self.__path = bus.create_input_context("IBusAgentIMContext")
+        super(IBusAgentIMContext, self).__init__(bus, self.__path, True)
 
         self.id_no = 0
         self.lookup_table = None
@@ -150,10 +150,10 @@ class IBusAgentIMContext(ibus.InputContext):
         print '(ibus-log "cursor down lookup table")'
 
     def __enabled_cb(self, ic):
-        print '(ibus-enabled-cb %d "%s")'%(ic.id_no, ic.get_engine().name)
+        print '(ibus-status-changed-cb %d "%s")'%(ic.id_no, ic.get_engine().name)
 
     def __disabled_cb(self, ic):
-        print '(ibus-disabled-cb %d)'%ic.id_no
+        print '(ibus-status-changed-cb %d nil)'%ic.id_no
 
 
 # Process methods from client
@@ -165,7 +165,7 @@ def create_imcontext():
     imcontexts.append(ic)
     ic.id_no = len(imcontexts)-1
     ic.set_capabilities(7)
-    print "(ibus-create-imcontext-cb %d)"%ic.id_no
+    print '(ibus-create-imcontext-cb %d)'%ic.id_no
 
 def destroy_imcontext(id_no):
     imcontexts[id_no].destroy()
@@ -177,7 +177,7 @@ def process_key_event(id_no, keyval, keycode, modifier_mask, pressed):
     else:
         mask = modifier_mask & modifier.RELEASE_MASK
     handled = imcontexts[id_no].process_key_event(keyval, keycode, mask)
-    print "(ibus-process-key-event-cb %d %s)"%(id_no, lisp_boolean(handled))
+    print '(ibus-process-key-event-cb %d %s)'%(id_no, lisp_boolean(handled))
 
 def set_cursor_location(id_no, x, y, w, h):
     imcontexts[id_no].set_cursor_location(x, y, w, h)
