@@ -54,7 +54,24 @@ from ibus import modifier
 
 # D-Bus
 
-bus = ibus.Bus()
+try:
+    bus = ibus.Bus()
+except TypeError:
+    import os
+    import time
+    if os.spawnlp(os.P_WAIT, "ibus-daemon", "ibus-daemon", "-d") == 0:
+        for i in range(10):
+            time.sleep(0.5)
+            try:
+                bus = ibus.Bus()
+            except:
+                pass
+            else:
+                break
+        else:
+            print '(error "Failed to connect with ibus-daemon")'
+    else:
+        print '(error "Failed to launch ibus-daemon")'
 
 # Miscellaneous functions
 

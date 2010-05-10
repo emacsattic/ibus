@@ -2411,6 +2411,7 @@ i.e. input focus is in this window."
 		(ibus-change-x-display)
 	      (error
 	       (ibus-message "%s: %s" (car err) (if (cddr err) (cdr err) (cadr err)))
+	       (if ibus-mode (ibus-mode-quit))
 	       (throw 'exit nil))))
 	  (setq ibus-current-buffer buffer)
 	  (let* ((group-id (or ibus-buffer-group
@@ -2433,10 +2434,11 @@ i.e. input focus is in this window."
 	  (unless (or non-x-p
 		      (and visited-p ibus-imcontext-id))
 	    (ibus-log "new buffer was detected: %S" buffer)
-	    (condition-case nil
+	    (condition-case err
 		(ibus-create-imcontext)
 	      (error
 	       (ibus-message "%s: %s" (car err) (if (cddr err) (cdr err) (cadr err)))
+	       (if ibus-mode (ibus-mode-quit))
 	       (throw 'exit nil))))
 	  ;; `ibus-preedit-text' not empty means
 	  ;; continuous preediting of incremental search
