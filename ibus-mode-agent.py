@@ -52,7 +52,9 @@ import glib
 import ibus
 from ibus import modifier
 
-# D-Bus
+########################################################################
+# Connect to iBus daemon
+########################################################################
 
 try:
     bus = ibus.Bus()
@@ -73,12 +75,16 @@ except TypeError:
     else:
         print '(error "Failed to launch ibus-daemon")'
 
+########################################################################
 # Miscellaneous functions
+########################################################################
 
 def lisp_boolean(boolean):
     return "t" if boolean else "nil"
 
-# Class definition
+########################################################################
+# Input Context
+########################################################################
 
 class IBusModeIMContext(ibus.InputContext):
 
@@ -172,8 +178,9 @@ class IBusModeIMContext(ibus.InputContext):
     def __disabled_cb(self, ic):
         print '(ibus-status-changed-cb %d nil)'%ic.id_no
 
-
+########################################################################
 # Process methods from client
+########################################################################
 
 imcontexts = []
 
@@ -214,40 +221,60 @@ def enable(id_no):
 def disable(id_no):
     imcontexts[id_no].disable()
 
+def set_engine(id_no, name):
+    for engine in bus.list_active_engines():
+        if name == '%s'%engine.name:
+            imcontexts[id_no].set_engine(engine)
+            break
+    else:
+        enable(id_no)
+
+########################################################################
+# Experiment
+########################################################################
+
 def get_engine(id_no):
-    print ';(ibus-log "get_engine: %s")'%imcontexts[id_no].get_engine().name
+    engine = imcontexts[id_no].get_engine()
+    print '(ibus-log "engine: %s")'%(engine.name if engine else 'none')
 
+def list_active_engines():
+    print '(ibus-log "active engines: %s")'% \
+        ' '.join('%s'%i.name for i in bus.list_active_engines())
+
+########################################################################
 # Main loop
+########################################################################
 
-mainloop = None
+class IBusModeMainLoop(glib.MainLoop):
 
-def quit_ibus():
-    mainloop.quit()
+    def __init__(self):
+        super(IBusModeMainLoop, self).__init__()
 
-def stdin_cb(fd, condition):
-    try:
-        exec sys.stdin.readline()
-    except:
-        import traceback
-        print '(error "%s")'%traceback.format_exc().replace('"', '\\"')
-    return True
-
-def main():
-    global mainloop
-    mainloop = glib.MainLoop()
-    glib.io_add_watch(0, glib.IO_IN, stdin_cb)
-    while True:
+    def __stdin_cb(self, fd, condition):
         try:
-            mainloop.run()
+            exec sys.stdin.readline()
         except:
             import traceback
             print '(error "%s")'%traceback.format_exc().replace('"', '\\"')
-        else:
-            break
-    for ic in imcontexts:
-        if ic:
-            ic.destroy()
-    print '(message "Bye.")'
+        return True
+
+    def run(self):
+        glib.io_add_watch(0, glib.IO_IN, self.__stdin_cb)
+        while True:
+            try:
+                super(IBusModeMainLoop, self).run()
+            except:
+                import traceback
+                print '(error "%s")'%traceback.format_exc().replace('"', '\\"')
+            else:
+                break
+        for ic in imcontexts:
+            if ic:
+                ic.destroy()
+        print '(message "Bye.")'
+
 
 if __name__ == "__main__":
-    main()
+
+    mainloop = IBusModeMainLoop()
+    mainloop.run()

@@ -6,7 +6,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.0.2.4")
+(defconst ibus-mode-version "0.0.2.6")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -1601,7 +1601,7 @@ i.e. input focus is in this window."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun ibus-reset-imcontext ()
-  (ibus-agent-send-receive "reset(%d)" ibus-imcontext-id))
+  (ibus-enable ibus-imcontext-status))
 
 (defun ibus-remove-preedit (&optional abort)
   (remove-hook 'before-change-functions 'ibus-before-change-function)
@@ -1861,7 +1861,7 @@ i.e. input focus is in this window."
 (defun ibus-agent-start ()
   (if (and (processp ibus-agent-process)
 	   (not (memq (process-status ibus-agent-process) '(open run))))
-      (ibus-agent-disconnect))
+      (ibus-agent-kill))
   (unless (and (processp ibus-agent-process)
 	       (memq (process-status ibus-agent-process) '(open run)))
     (let ((proc (ibus-agent-start-internal)))
@@ -2315,14 +2315,16 @@ i.e. input focus is in this window."
   (if (eq ibus-current-buffer (current-buffer))
       (setq ibus-current-buffer nil)))
 
-(defun ibus-enable ()
+(defun ibus-enable (&optional engine-name)
   (interactive)
   (when (and (interactive-p)
 	     (null ibus-current-buffer))
     (ibus-check-current-buffer))
   (when (and (processp ibus-agent-process)
 	     (numberp ibus-imcontext-id))
-    (ibus-agent-send-receive "enable(%d)" ibus-imcontext-id)))
+    (if engine-name
+	(ibus-agent-send-receive "set_engine(%d, %S)" ibus-imcontext-id engine-name)
+    (ibus-agent-send-receive "enable(%d)" ibus-imcontext-id))))
 
 (defun ibus-disable ()
   (interactive)
