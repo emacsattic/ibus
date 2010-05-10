@@ -6,7 +6,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.0.2.1")
+(defconst ibus-mode-version "0.0.2.2")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -2178,13 +2178,17 @@ i.e. input focus is in this window."
 		unread-command-events
 		(cons ibus-last-command-event unread-command-events))
 	  (remove-hook 'post-command-hook 'ibus-check-current-buffer)
-	  (add-hook 'pre-command-hook 'ibus-rejected-event-command-pre-function)))))
+	  (add-hook 'pre-command-hook 'ibus-fallback-pre-function)))))
   (setq ibus-last-rejected-event ibus-last-command-event
 	ibus-last-command-event nil))
 
-(defun ibus-rejected-event-command-pre-function ()
+(defun ibus-fallback-pre-function ()
+  (remove-hook 'pre-command-hook 'ibus-fallback-pre-function)
   (add-hook 'post-command-hook 'ibus-check-current-buffer)
-  (remove-hook 'pre-command-hook 'ibus-rejected-event-command-pre-function)
+  (add-hook 'post-command-hook 'ibus-fallback-post-function))
+
+(defun ibus-fallback-post-function ()
+  (remove-hook 'post-command-hook 'ibus-fallback-post-function)
   (if ibus-keymap-overlay
       (overlay-put ibus-keymap-overlay 'keymap ibus-mode-preedit-map))
   (ibus-set-mode-map-alist))
@@ -2236,7 +2240,7 @@ i.e. input focus is in this window."
 	;; IMContext is not registered or key event is not recognized
 	(ibus-process-key-event-cb ibus-imcontext-id nil))))
   ;; Repair post-command-hook
-  (unless (memq 'ibus-rejected-event-command-pre-function
+  (unless (memq 'ibus-fallback-pre-function
 		(default-value 'pre-command-hook))
     (when (and (local-variable-p 'post-command-hook)
 	       (not (memq t post-command-hook)))
