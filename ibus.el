@@ -6,7 +6,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.0.2.2")
+(defconst ibus-mode-version "0.0.2.3")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -371,14 +371,6 @@ See `cursor-type'."
 is put on the selected segment if this option is non-nil. Otherwise,
 the cursor is put to the tail of the preediting area."
   :type 'boolean
-  :group 'ibus-appearance)
-
-(defcustom ibus-mode-line-string-form
-  '(" iBus" (and status (format "[%s]" status)))
-  "This variable specify a string that appears in the mode line
-when ibus-mode is active, and not otherwise. This string should be
-a short string which starts with a space and represents ibus-mode."
-  :type 'list
   :group 'ibus-appearance)
 
 ;; Advanced settings
@@ -1360,7 +1352,7 @@ restart ibus-mode so that this settings may become effective."
   (let ((status (cdr (assoc ibus-selected-display
 			    (nth 2 (assq ibus-buffer-group
 					 ibus-buffer-group-alist))))))
-    (eval `(concat ,@ibus-mode-line-string-form))))
+    (concat " iBus" (and status (format "[%s]" status)))))
 
 ;; Cursor color
 
@@ -1540,8 +1532,8 @@ i.e. input focus is in this window."
 	  (setq ibus-agent-process-alist (cons (cons display ibus-agent-process)
 					       ibus-agent-process-alist)
 		ibus-selected-display display)
-	(ibus-mode-off)
-	(error "iBus: Unable to open socket for display %s" display)))))
+	(ibus-mode-quit)
+	(error "Unable to launch agent for display %S. Turned off ibus-mode" display)))))
 
 (defun ibus-change-focus (focus-in)
   (ibus-agent-send (if focus-in "focus_in(%d)" "focus_out(%d)")
@@ -2284,9 +2276,8 @@ i.e. input focus is in this window."
 		    (< (float-time) time-limit))
 	  (sit-for 0.1)))
       (unless (numberp ibus-imcontext-id)
-	(ibus-message "Couldn't create imcontext. Turned off ibus-mode.")
 	(ibus-mode-quit)
-	(error))
+	(error "Couldn't create imcontext. Turned off ibus-mode."))
       (setcdr group
 	      (list (cons (cons ibus-selected-display ibus-imcontext-id)
 			  (cadr group))
@@ -2415,7 +2406,11 @@ i.e. input focus is in this window."
 		    (ibus-abort-preedit)))))
 	;; Setup currently selected buffer
 	  (unless display-unchanged-p
-	    (ibus-change-x-display))
+	    (condition-case err
+		(ibus-change-x-display)
+	      (error
+	       (ibus-message "%s: %s" (car err) (if (cddr err) (cdr err) (cadr err)))
+	       (throw 'exit nil))))
 	  (setq ibus-current-buffer buffer)
 	  (let* ((group-id (or ibus-buffer-group
 			       ibus-parent-buffer-group
@@ -2439,7 +2434,9 @@ i.e. input focus is in this window."
 	    (ibus-log "new buffer was detected: %S" buffer)
 	    (condition-case nil
 		(ibus-create-imcontext)
-	      (error (throw 'exit nil))))
+	      (error
+	       (ibus-message "%s: %s" (car err) (if (cddr err) (cdr err) (cadr err)))
+	       (throw 'exit nil))))
 	  ;; `ibus-preedit-text' not empty means
 	  ;; continuous preediting of incremental search
 	  (when (string= ibus-preedit-text "")
@@ -2529,8 +2526,6 @@ i.e. input focus is in this window."
   (setq-default ibus-buffer-group nil)
   (setq-default ibus-mode-map-prev-disabled nil)
   (setq ibus-current-buffer nil
-	ibus-frame-focus nil
-	ibus-selected-frame nil
 	ibus-buffer-group-alist nil
 	ibus-imcontext-id nil
 	ibus-imcontext-status nil
@@ -2545,11 +2540,17 @@ i.e. input focus is in this window."
   (if (not (or (eq window-system 'x) ; X frame
 	       (getenv "DISPLAY")))  ; non-X frame under X session
       (ibus-mode-quit)
-    (if (processp ibus-agent-process)
-	(ibus-mode-off)) ; Restart ibus-mode
+    (let (process-live-p)
+      (mapc (lambda (pair)
+	      (if (processp (cdr pair))
+		  (setq process-live-p t)))
+	    ibus-agent-process-alist)
+      (if process-live-p (ibus-mode-off))) ; Restart ibus-mode
     (unwind-protect
 	(ibus-agent-start)
-      (if (not (processp ibus-agent-process))
+      (if (not (and ibus-agent-process
+		    (memq (process-status ibus-agent-process)
+			  '(open run))))
 	  ;; Connection failed
 	  (ibus-mode-quit)
 	;; Connection succeeded
@@ -2557,14 +2558,15 @@ i.e. input focus is in this window."
 	      ibus-agent-process-alist (list (cons ibus-selected-display
 						   ibus-agent-process)))
 	;; Turn on minor mode
-	(setq ibus-mode t)
+	(setq-default ibus-mode t)
 	(ibus-cleanup-variables)
-	(setq ibus-selected-frame (selected-frame))
+	(setq ibus-frame-focus nil
+	      ibus-selected-frame (selected-frame))
 	(ibus-defadvice-disable-for-preedit)
 	(ibus-activate-advices-disable-for-preedit t)
 	(ibus-activate-advice-describe-key t)
 	;; Initialize key bindings
-	(ibus-update-key-bindings)
+(ibus-update-key-bindings)
 	(ibus-set-mode-map-alist)
 	(add-to-ordered-list
 	 'emulation-mode-map-alists 'ibus-mode-map-alist 50)
@@ -2597,10 +2599,10 @@ i.e. input focus is in this window."
   (ibus-cleanup-preedit)
   (mapc (lambda (pair)
 	  (setq ibus-agent-process (cdr pair))
-	  (ibus-agent-kill)
-	  (setcdr pair nil))
+	  (ibus-agent-kill))
 	ibus-agent-process-alist)
-  (setq ibus-mode nil)
+  (setq ibus-agent-process-alist nil)
+  (setq-default ibus-mode nil)
   (ibus-cleanup-variables)
   (ibus-set-cursor-color)
   (ibus-log "ibus-mode OFF")
@@ -2613,6 +2615,7 @@ i.e. input focus is in this window."
     (condition-case err
 	(ibus-change-focus nil)
       (error (ibus-message "%S" err))))
+  (setq ibus-frame-focus nil)
   ;; Destroy IMContext
   (mapc (lambda (group)
 	  (let ((ibus-imcontext-id (cdar (cadr group))))
@@ -2623,14 +2626,26 @@ i.e. input focus is in this window."
   ;; Turn off minor mode
   (ibus-mode-quit))
 
-(defun ibus-mode (&optional arg)
-  "Start/stop iBus conversion system."
-  (interactive "P")
-  (if (if (null arg)
-	  (not ibus-mode)
-	(> (prefix-numeric-value arg) 0))
+(defun ibus-update-mode ()
+  (if ibus-mode
       (ibus-mode-on)
     (ibus-mode-off)))
+
+(defun ibus-mode (&optional arg)
+  "Toggle iBus minor mode (ibus-mode).
+With optional argument ARG, turn ibus-mode on if ARG is
+positive, otherwise turn it off."
+  (interactive "P")
+  (if (not (or (eq window-system 'x)
+	       (getenv "DISPLAY")
+	       ibus-mode))
+      (prog1 nil
+	(ibus-message "ibus-mode needs Emacs to run under X session."))
+    (setq-default ibus-mode
+		  (if (null arg)
+		      (not ibus-mode)
+		    (> (prefix-numeric-value arg) 0)))
+    (ibus-update-mode)))
 
 ;; minor-mode-alist
 (unless (assq 'ibus-mode minor-mode-alist)
