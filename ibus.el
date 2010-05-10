@@ -6,7 +6,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.0.2.3")
+(defconst ibus-mode-version "0.0.2.4")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -1461,8 +1461,8 @@ Users can also get the frame coordinates by referring the variable
 
 (defun ibus-compute-pixel-position
   (&optional pos window frame-coordinates)
-  "Return the absolute pixel coordinates of POS in WINDOW as a cons cell
-like (X . Y), showing the location of bottom left corner of the character.
+  "Return the absolute pixel coordinates of POS in WINDOW as a list like
+\(X Y W H), here W and H are the pixel width and height of object at POS.
 
 Omitting POS and WINDOW means use current position and selected window,
 respectively.
@@ -1499,12 +1499,13 @@ the previous values of frame coordinates by referring the variable
 ;;;              even if the header line is displayed?
 
 (defun ibus-set-cursor-location ()
-  (let* ((rectangle (ibus-compute-pixel-position
-		     (+ ibus-preedit-point ibus-preedit-curpos) nil
-		     ibus-saved-frame-coordinates)))
-    (ibus-log "cursor position (x y w h): %s" rectangle)
-    (apply 'ibus-agent-send "set_cursor_location(%d, %d, %d, %d, %d)"
-	   ibus-imcontext-id rectangle))) ; Send only
+  (let* ((rect (ibus-compute-pixel-position
+		(+ ibus-preedit-point ibus-preedit-curpos) nil
+		ibus-saved-frame-coordinates)))
+    (ibus-log "cursor position (x y w h): %s" rect)
+    ;; Finite value of width seems to locate candidate window in incorrect position
+    (ibus-agent-send "set_cursor_location(%d, %d, %d, 0, %d)" ibus-imcontext-id
+		     (car rect) (cadr rect) (nth 3 rect)))) ; Send only
 
 ;; Frame input focuses
 

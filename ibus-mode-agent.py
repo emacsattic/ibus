@@ -6,7 +6,7 @@
 
 # Author: S. Irie
 # Maintainer: S. Irie
-# Version: 0.0.2
+# Version: 0.0.2.4
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -164,7 +164,7 @@ def create_imcontext():
     ic = IBusAgentIMContext()
     imcontexts.append(ic)
     ic.id_no = len(imcontexts)-1
-    ic.set_capabilities(7)
+    ic.set_capabilities(9)
     print '(ibus-create-imcontext-cb %d)'%ic.id_no
 
 def destroy_imcontext(id_no):
