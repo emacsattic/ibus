@@ -6,7 +6,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.0.2.6")
+(defconst ibus-mode-version "0.0.2.7")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -817,21 +817,22 @@ use either \\[customize] or the function `ibus-mode'."
 ;;  Each element of `ibus-buffer-group-alist' is a list:
 ;;  (GROUP IMCONTEXT-ID-ALIST IMCONTEXT-STATUS-ALIST BUFFER-LIST)
 ;;  GROUP is group identifier which is an object comparable by `eq'
-;;  IMCONTEXT-ID-ALIST is an alist of string such as "12"
-;;  IMCONTEXT-STATUS-ALIST is an alist of boolean nil or t
+;;  IMCONTEXT-ID-ALIST is an alist of number such as 12
+;;  IMCONTEXT-STATUS-ALIST is an alist of string or nil, where string
+;;  indicates input method engine
 ;;  BUFFER-LIST is a list of buffers which belong to this group
 ;; Example:
 ;;  ((#<buffer text.txt>
-;;          ((":1.0" . "1")
-;;           (":0.0" . "20"))
-;;          ((":1.0" . t)
+;;          ((":1.0" . 1)
+;;           (":0.0" . 20))
+;;          ((":1.0" . "anthy")
 ;;           (":0.0" . nil))
 ;;          (#<buffer text.txt>))
 ;;   (#<buffer *scratch*>
-;;          ((":1.0" . "2")
-;;           (":0.0" . "19"))
+;;          ((":1.0" . 2)
+;;           (":0.0" . 19))
 ;;          ((":1.0" . nil)
-;;           (":0.0" . t))
+;;           (":0.0" . "skk"))
 ;;          (#<buffer *scratch*>)))
 (defvar ibus-buffer-group-alist nil)
 (defvar ibus-imcontext-id nil)
