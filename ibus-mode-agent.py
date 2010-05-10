@@ -6,7 +6,7 @@
 
 # Author: S. Irie
 # Maintainer: S. Irie
-# Version: 0.0.2.4
+# Version: 0.0.2.5
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -80,11 +80,11 @@ def lisp_boolean(boolean):
 
 # Class definition
 
-class IBusAgentIMContext(ibus.InputContext):
+class IBusModeIMContext(ibus.InputContext):
 
     def __init__(self):
-        self.__path = bus.create_input_context("IBusAgentIMContext")
-        super(IBusAgentIMContext, self).__init__(bus, self.__path, True)
+        self.__path = bus.create_input_context("IBusModeIMContext")
+        super(IBusModeIMContext, self).__init__(bus, self.__path, True)
 
         self.id_no = 0
         self.lookup_table = None
@@ -178,7 +178,7 @@ class IBusAgentIMContext(ibus.InputContext):
 imcontexts = []
 
 def create_imcontext():
-    ic = IBusAgentIMContext()
+    ic = IBusModeIMContext()
     imcontexts.append(ic)
     ic.id_no = len(imcontexts)-1
     ic.set_capabilities(9)
