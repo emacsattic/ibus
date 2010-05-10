@@ -6,7 +6,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.0.2.7")
+(defconst ibus-mode-version "0.0.2.8")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -89,11 +89,9 @@
 
 ;; ToDo:
 
-;;  * Lookup window
-;;  * Panel
+;;  * surrounding text
+;;  * Japanese thumb shift input
 ;;  * leim
-;;  * Isearch
-;;  * INHERIT-INPUT-METHOD
 
 ;;; Code:
 
@@ -423,6 +421,9 @@ the milliseconds."
 ;; System settings
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defvar ibus-agent-command "/usr/share/pyshared/ibus-mode/ibus-mode-agent.py")
+(defvar ibus-python-command nil)
+
 (defvar ibus-debug nil)
 (defvar ibus-log-buffer "*ibus-mode log*")
 
@@ -443,8 +444,12 @@ deactivated when invoking these hooks.")
   '(undo undo-only redo undo-tree-undo undo-tree-redo)
   "List of symbols specifying commands which are disabled when preediting.")
 
-(defvar ibus-agent-command "/usr/share/pyshared/ibus-mode/ibus-mode-agent.py")
-(defvar ibus-python-command nil)
+(defvar ibus-inherit-im-functions
+  '(read-from-minibuffer read-string read-no-blanks-input completing-read)
+  "List of symbols specifying functions which inherit input method.
+If the function takes the argument INHERIT-INPUT-METHOD, input method
+is inherited only when it's non-nil. Otherwise, input method is
+unconditionally inherited.")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Constants
@@ -1003,6 +1008,7 @@ use either \\[customize] or the function `ibus-mode'."
 	  (setq buffer-undo-list (cons (cons beg end) new-list)))))))
 
 ;; Advices for commands which conflict with preediting
+
 (defun ibus-defadvice-disable-for-preedit ()
   (mapc (lambda (command)
 	  (eval
@@ -1021,6 +1027,7 @@ use either \\[customize] or the function `ibus-mode'."
     (ad-activate-regexp "^ibus-inhibit-")))
 
 ;; Advices for yasnippet (version < 0.6)
+
 (mapc (lambda (command)
 	(eval
 	 `(defadvice ,command
@@ -2506,7 +2513,7 @@ i.e. input focus is in this window."
 			 (or (null (assq 'inherit-input-method ad-arg-bindings))
 			     inherit-input-method
 			     ibus-force-inherit-im))
-		       (stringp ibus-imcontext-id))
+		       (numberp ibus-imcontext-id))
 		  (let ((ibus-force-inherit-im t))
 		    (setq ibus-parent-buffer-group ibus-buffer-group)
 		    ad-do-it)
@@ -2518,6 +2525,153 @@ i.e. input focus is in this window."
       (ad-enable-regexp "^ibus-inherit-im-")
     (ad-disable-regexp "^ibus-inherit-im-"))
   (ad-activate-regexp "^ibus-inherit-im-"))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Setup incremental search
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Internal functions
+
+(defun ibus-isearch-start ()
+  (if ibus-preediting-p
+      (ibus-abort-preedit))
+  (unless (or (eq ibus-isearch-cursor-type 0)
+	      (local-variable-p 'ibus-cursor-type-saved))
+    (setq ibus-cursor-type-saved
+	  (or (and (local-variable-p 'cursor-type) cursor-type)
+	      1)))) ; 1 means that global value has been used
+
+(defun ibus-isearch-check-preedit ()
+  (unless ibus-preediting-p
+    (with-current-buffer ibus-isearch-minibuffer
+      (exit-minibuffer))))
+
+(defun ibus-isearch-read-string-post-function ()
+  (ibus-log "isearch: exit iBus input")
+  (remove-hook 'post-command-hook 'ibus-isearch-check-preedit)
+  (remove-hook 'minibuffer-exit-hook 'ibus-isearch-read-string-post-function t)
+  (ibus-isearch-start)
+  (when (numberp ibus-imcontext-id)
+    (let ((ibus-frame-focus nil)) ; To avoid focus out
+      (ibus-destroy-imcontext))))
+
+(defun ibus-isearch-read-string-pre-function ()
+  (ibus-log "isearch: start iBus input")
+  (remove-hook 'post-command-hook 'ibus-isearch-read-string-pre-function)
+  (add-hook 'post-command-hook 'ibus-isearch-check-preedit t)
+  (add-hook 'minibuffer-exit-hook 'ibus-isearch-read-string-post-function nil t)
+  (ibus-show-preedit)
+  (setq ibus-isearch-minibuffer (current-buffer)))
+
+(defun ibus-isearch-process-search-characters (last-char)
+  (let ((overriding-terminal-local-map nil)
+	(prompt (isearch-message-prefix))
+	(minibuffer-local-map (with-no-warnings isearch-minibuffer-local-map))
+	(current-input-method nil)
+	(ibus-imcontext-temporary-for-minibuffer nil)
+	(ibus-isearch-minibuffer nil)
+	(ibus-current-buffer nil)
+	str junk-hist)
+    (add-hook 'post-command-hook 'ibus-isearch-read-string-pre-function t)
+    (if (eq (car unread-command-events) 'ibus-resume-preedit)
+	(setq unread-command-events (cdr unread-command-events))
+      (setq unread-command-events (cons last-char unread-command-events)))
+    (setq str (read-string prompt isearch-string 'junk-hist nil t)
+	  isearch-string ""
+	  isearch-message "")
+    (ibus-log "isearch-string: %S" str)
+    (if (and str (> (length str) 0))
+	(let ((unread-command-events nil))
+	  (isearch-process-search-string str str))
+      (isearch-update))
+    (if (eq (car unread-command-events) 'ibus-resume-preedit)
+	(if (string= ibus-preedit-text "")
+	    (setq unread-command-events (cdr unread-command-events))
+	  (setq unread-command-events (cons ?a unread-command-events))))))
+
+(defun ibus-isearch-other-control-char ()
+  (if (and ibus-use-kana-ro-key
+	   (eq (event-basic-type last-command-event) ibus-kana-ro-key-symbol))
+      (setq unread-command-events
+	    (if ibus-imcontext-status
+		(append (list ?a 'ibus-resume-preedit last-command-event)
+			unread-command-events)
+	      (cons (event-convert-list
+		     (append (event-modifiers last-command-event) (list ?\\)))
+		    unread-command-events)))
+    (funcall (lookup-key ibus-mode-map (this-command-keys)))
+    (if isearch-mode
+	(isearch-update))))
+
+;; Advices for `isearch.el'
+
+(defadvice isearch-printing-char
+  (around ibus-isearch-printing-char ())
+  (if ibus-imcontext-status
+      (let ((current-input-method "iBus"))
+	ad-do-it)
+    ad-do-it))
+
+(defadvice isearch-other-control-char
+  (around ibus-isearch-other-control-char ())
+  (if (and ibus-mode
+	   ;; `lookup-key' returns nil if KEY is undefined.
+	   ;; Otherwise, returns a number if KEY is too long
+	   ;; (this maybe means the case that KEY is mouse event).
+	   (commandp (lookup-key ibus-mode-map (this-command-keys))))
+      (ibus-isearch-other-control-char)
+    ad-do-it))
+
+(defadvice isearch-message-prefix
+  (around ibus-isearch-message-prefix ())
+  (if (and ibus-imcontext-status
+	   (not nonincremental)
+	   (not (eq this-command 'isearch-edit-string)))
+      (let ((current-input-method "iBus")
+	    (current-input-method-title "iBus"))
+	ad-do-it)
+    ad-do-it))
+
+;; Advices for `isearch-x.el'
+
+(defadvice isearch-toggle-specified-input-method
+  (around ibus-isearch-toggle-specified-input-method ())
+  (if ibus-imcontext-status
+      (isearch-update)
+    ad-do-it))
+
+(defadvice isearch-toggle-input-method
+  (around ibus-isearch-toggle-input-method ())
+  (if ibus-imcontext-status
+      (isearch-update)
+    ad-do-it))
+
+(defadvice isearch-process-search-multibyte-characters
+  (around ibus-isearch-process-search-characters ())
+  (if (and (string= current-input-method "iBus")
+	   (eq this-command 'isearch-printing-char))
+      (ibus-isearch-process-search-characters last-char)
+    ad-do-it))
+
+;; Commands and functions
+(defun ibus-enable-isearch ()
+  "Make iBus usable with isearch-mode."
+  (interactive)
+  (add-hook 'isearch-mode-hook 'ibus-isearch-start)
+  (ad-enable-regexp "^ibus-isearch-")
+  (ad-activate-regexp "^ibus-isearch-"))
+
+(defun ibus-disable-isearch ()
+  "Make iBus not usable with isearch-mode."
+  (interactive)
+  (remove-hook 'isearch-mode-hook 'ibus-isearch-start)
+  (ad-disable-regexp "^ibus-isearch-")
+  (ad-activate-regexp "^ibus-isearch-"))
+
+(defun ibus-setup-isearch ()
+  (if ibus-use-in-isearch-window
+      (ibus-enable-isearch)
+    (ibus-disable-isearch)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Setup minor mode
@@ -2570,9 +2724,12 @@ i.e. input focus is in this window."
 	      ibus-selected-frame (selected-frame))
 	(ibus-defadvice-disable-for-preedit)
 	(ibus-activate-advices-disable-for-preedit t)
+	(ibus-defadvice-inherit-imcontext)
+	(ibus-activate-advices-inherit-im t)
 	(ibus-activate-advice-describe-key t)
+	(ibus-setup-isearch)
 	;; Initialize key bindings
-(ibus-update-key-bindings)
+	(ibus-update-key-bindings)
 	(ibus-set-mode-map-alist)
 	(add-to-ordered-list
 	 'emulation-mode-map-alists 'ibus-mode-map-alist 50)
@@ -2580,6 +2737,7 @@ i.e. input focus is in this window."
 	(add-hook 'minibuffer-exit-hook 'ibus-exit-minibuffer-function)
 	(add-hook 'ediff-startup-hook 'ibus-check-current-buffer)
 	(add-hook 'post-command-hook 'ibus-check-current-buffer)
+	(ibus-log "post-command-hook: %s" post-command-hook)
 	(add-hook 'after-make-frame-functions 'ibus-after-make-frame-function)
 	(add-hook 'kill-emacs-hook 'ibus-mode-off)
 	(ibus-log "ibus-mode ON")
@@ -2600,7 +2758,9 @@ i.e. input focus is in this window."
 	(delq 'ibus-mode-map-alist emulation-mode-map-alists))
   (ibus-update-kana-ro-key t)
   (ibus-activate-advices-disable-for-preedit nil)
+  (ibus-activate-advices-inherit-im nil)
   (ibus-activate-advice-describe-key nil)
+  (ibus-disable-isearch)
   (ibus-cancel-focus-update-timer)
   (ibus-cleanup-preedit)
   (mapc (lambda (pair)
