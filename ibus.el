@@ -6,7 +6,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.0.2.14")
+(defconst ibus-mode-version "0.0.2.15")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -2392,6 +2392,9 @@ i.e. input focus is in this window."
 (defun ibus-status-changed-cb (ic status)
   (if (not (= ic ibus-imcontext-id))
       (ibus-message "IMContext ID (%s) is mismatched." ic)
+    (unless (string= ibus-preedit-prev-text "")
+      (ibus-commit-text-cb ic ibus-preedit-prev-text)
+      (ibus-cleanup-preedit))
     (setq ibus-imcontext-status status)
     (setcdr (assoc ibus-selected-display
 		   (nth 2 (assq ibus-buffer-group ibus-buffer-group-alist)))
