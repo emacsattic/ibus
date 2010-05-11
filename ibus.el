@@ -6,7 +6,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.0.2.12")
+(defconst ibus-mode-version "0.0.2.14")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -1846,7 +1846,9 @@ i.e. input focus is in this window."
   (ibus-mode-quit)
   (if (ibus-mode-on) ; Try to restart
       ;; Succeeded
-      (ibus-check-current-buffer)
+      (progn
+	(ibus-message "ibus-mode restarted")
+	(ibus-check-current-buffer))
     ;; Failed
     (ibus-message "Agent was unexpectedly stopped. Turned off ibus-mode.")))
 
