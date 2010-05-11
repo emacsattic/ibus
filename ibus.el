@@ -6,7 +6,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.0.2.11")
+(defconst ibus-mode-version "0.0.2.12")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -879,7 +879,8 @@ use either \\[customize] or the function `ibus-mode'."
 	  (if window (select-window window))
 	  (goto-char (point-max))
 	  (insert log-str ?\n)
-	  (if window (recenter -1)))))))
+	  (if window (recenter -1))
+	  log-str)))))
 
 (defun ibus-log (format-string &rest args)
   (if (and ibus-debug
