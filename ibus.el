@@ -6,7 +6,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.0.2.9")
+(defconst ibus-mode-version "0.0.2.10")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -934,8 +934,7 @@ use either \\[customize] or the function `ibus-mode'."
   (let ((bas (or (car (rassq keyval ibus-keyval-alist))
 		 (if (< keyval 128) keyval)))
 	(mods nil)
-	(mask1 1)
-	mod1)
+	mask1 mod1)
     (if (and ibus-use-ja-onbiki-key
 	     ibus-ja-onbiki-key-symbol
 	     (eq bas ?\xa5) ; ¥
@@ -946,9 +945,9 @@ use either \\[customize] or the function `ibus-mode'."
 		      bas)))
     (when bas
       (dotimes (i 28)
-	(if (and (logand modmask mask1)
-		 (setq mod1 (car (rassq mask1 ibus-modifier-alist))))
-	    (push mod1 mods)))
+	(if (and (not (zerop (setq mask1 (logand modmask (lsh 1 i)))))
+		 (setq mod1 (rassq mask1 ibus-modifier-alist)))
+	    (push (car mod1) mods)))
       (event-convert-list (nconc mods (list bas))))))
 
 (defun ibus-null-command ()
@@ -2038,6 +2037,8 @@ i.e. input focus is in this window."
 
 (defun ibus-commit-text-cb (ic text)
   (cond
+   ((not (= ic ibus-imcontext-id))
+    (ibus-message "IMContext ID (%s) is mismatched." id))
    (isearch-mode
     (isearch-process-search-string text text))
    (buffer-read-only
@@ -2102,6 +2103,46 @@ i.e. input focus is in this window."
 				  (setq i (1+ i)) candidate))
 			current-table
 			" "))))
+
+(defun ibus-*table--cell-delete-region (beg end)
+  (push-mark beg t t)
+  (goto-char end)
+  (call-interactively '*table--cell-delete-region))
+
+(defun ibus-delete-surrounding-text-cb (ic offset length)
+  (cond
+   ((not (= ic ibus-imcontext-id))
+    (ibus-message "IMContext ID (%s) is mismatched." ic))
+   (buffer-read-only
+    (ibus-message "Buffer is read-only: %S" (current-buffer)))
+   ((not ibus-string-insertion-failed)
+    (ibus-log "delete surrounding text")
+    (ibus-remove-preedit)
+    (let* ((pos (point))
+	   (beg (+ pos offset))
+	   (end (+ beg length))
+	   (retval t))
+      (condition-case err
+	  (cond
+	   ((and (featurep 'table)
+		 (with-no-warnings table-mode-indicator))
+	    (ibus-*table--cell-delete-region beg end))
+	   (t
+	    (delete-region beg end)))
+	(text-read-only
+	 (ibus-message "Failed to delete surrounding text %S" err)
+	 (setq retval nil
+	       ibus-string-insertion-failed t)))
+      (ibus-show-preedit t)))))
+
+(defun ibus-forward-key-event-cb (ic keyval modmask &optional pressed)
+  (let ((event (ibus-encode-event keyval modmask)))
+    (if event
+	(if pressed
+	    (setq unread-command-events (cons event unread-command-events)))
+      (if (not (= ic ibus-imcontext-id))
+	  (ibus-message "IMContext ID (%s) is mismatched." ic)
+	(ibus-agent-send-key-event keyval modmask pressed)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Process key events

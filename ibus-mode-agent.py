@@ -6,7 +6,7 @@
 
 # Author: S. Irie
 # Maintainer: S. Irie
-# Version: 0.0.2.5
+# Version: 0.0.2.10
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -111,6 +111,8 @@ class IBusModeIMContext(ibus.InputContext):
         self.connect('cursor-down-lookup-table', self.__cursor_down_lookup_table_cb)
         self.connect('enabled', self.__enabled_cb)
         self.connect('disabled', self.__disabled_cb)
+#        self.connect('delete-surrounding-text', self.__delete_surrounding_text_cb)
+#        self.connect('forward-key-event', self.__forward_key_event_cb)
 
     # Callbacks
 
@@ -178,6 +180,15 @@ class IBusModeIMContext(ibus.InputContext):
     def __disabled_cb(self, ic):
         print '(ibus-status-changed-cb %d nil)'%ic.id_no
 
+    def __delete_surrounding_text_cb(self, ic, offset, n_chars):
+        print '(ibus-delete-surrounding-text-cb %d %d %d)'% \
+            (ic.id_no, offset, n_chars)
+
+    def __forward_key_event_cb(self, ic, keyval, keycode, modifiers):
+        print '(ibus-forward-key-event-cb %d %d %d %s)'% \
+            (ic.id_no, keyval, modifiers & ~modifier.RELEASE_MASK,
+             lisp_boolean(modifiers & modifier.RELEASE_MASK == 0))
+
 ########################################################################
 # Process methods from client
 ########################################################################
@@ -188,7 +199,7 @@ def create_imcontext():
     ic = IBusModeIMContext()
     imcontexts.append(ic)
     ic.id_no = len(imcontexts)-1
-    ic.set_capabilities(9)
+    ic.set_capabilities(int('101001',2))
     print '(ibus-create-imcontext-cb %d)'%ic.id_no
 
 def destroy_imcontext(id_no):
@@ -213,7 +224,7 @@ def focus_out(id_no):
     imcontexts[id_no].focus_out()
 
 def reset(id_no):
-    print ';(ibus-log "reset: %r")'%imcontexts[id_no].reset()
+    imcontexts[id_no].reset()
 
 def enable(id_no):
     imcontexts[id_no].enable()
@@ -240,6 +251,15 @@ def get_engine(id_no):
 def list_active_engines():
     print '(ibus-log "active engines: %s")'% \
         ' '.join('%s'%i.name for i in bus.list_active_engines())
+
+def delete_surrounding_text(id_no, offset, n_chars):
+    print '(ibus-delete-surrounding-text-cb %d %d %d)'% \
+        (id_no, offset, n_chars)
+
+def forward_key_event(id_no, keyval, keycode, modifiers):
+    print '(ibus-forward-key-event-cb %d %d %d %s)'% \
+        (id_no, keyval, modifiers & ~modifier.RELEASE_MASK,
+         lisp_boolean(modifiers & modifier.RELEASE_MASK == 0))
 
 ########################################################################
 # Main loop
