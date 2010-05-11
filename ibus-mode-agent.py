@@ -6,7 +6,7 @@
 
 # Author: S. Irie
 # Maintainer: S. Irie
-# Version: 0.0.2.10
+# Version: 0.0.2.13
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -72,8 +72,10 @@ except TypeError:
                 break
         else:
             print '(error "Failed to connect with ibus-daemon")'
+            exit(1)
     else:
         print '(error "Failed to launch ibus-daemon")'
+        exit(1)
 
 ########################################################################
 # Miscellaneous functions
@@ -267,8 +269,13 @@ def forward_key_event(id_no, keyval, keycode, modifiers):
 
 class IBusModeMainLoop(glib.MainLoop):
 
-    def __init__(self):
+    def __init__(self, bus):
         super(IBusModeMainLoop, self).__init__()
+        bus.connect("disconnected", self.__disconnected_cb)
+
+    def __disconnected_cb(self, *args):
+        print '(ibus-log "disconnected")'
+        exit()
 
     def __stdin_cb(self, fd, condition):
         try:
@@ -291,10 +298,9 @@ class IBusModeMainLoop(glib.MainLoop):
         for ic in imcontexts:
             if ic:
                 ic.destroy()
-        print '(message "Bye.")'
 
 
 if __name__ == "__main__":
 
-    mainloop = IBusModeMainLoop()
+    mainloop = IBusModeMainLoop(bus)
     mainloop.run()
