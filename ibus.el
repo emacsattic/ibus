@@ -6,7 +6,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.0.2.16")
+(defconst ibus-mode-version "0.0.2.17")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -2078,10 +2078,12 @@ i.e. input focus is in this window."
     (ibus-show-preedit t))))
 
 (defun ibus-hide-preedit-text-cb (ic)
-  (setq ibus-preedit-shown nil))
+  (setq ibus-preedit-shown nil
+	ibus-preedit-update t))
 
 (defun ibus-show-preedit-text-cb (ic)
-  (setq ibus-preedit-shown t))
+  (setq ibus-preedit-shown t
+	ibus-preedit-update t))
 
 (defun ibus-update-preedit-text-cb (ic text cursor-pos visible &rest attributes)
   (setq ibus-preedit-text text
@@ -2091,14 +2093,17 @@ i.e. input focus is in this window."
 	ibus-preedit-update t))
 
 (defun ibus-hide-auxiliary-text-cb (ic)
-  (setq ibus-auxiliary-shown nil))
+  (setq ibus-auxiliary-shown nil
+	ibus-preedit-update t))
 
 (defun ibus-show-auxiliary-text-cb (ic)
-  (setq ibus-auxiliary-shown t))
+  (setq ibus-auxiliary-shown t
+	ibus-preedit-update t))
 
 (defun ibus-update-auxiliary-text-cb (ic text visible)
   (setq ibus-auxiliary-text text
-	ibus-auxiliary-shown visible))
+	ibus-auxiliary-shown visible
+	ibus-preedit-update t))
 
 (defun ibus-hide-lookup-table-cb (ic)
   (message nil))
