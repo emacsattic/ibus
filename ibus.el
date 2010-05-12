@@ -6,7 +6,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.0.2.15")
+(defconst ibus-mode-version "0.0.2.16")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -435,10 +435,10 @@ value manually before ibus.el is loaded.")
 
 (defvar ibus-agent-buffer-name " *iBus*")
 
-(defvar ibus-incompatible-mode-hooks
-  '(ebrowse-tree-mode-hook w3m-mode-hook)
-  "List of symbols specifying major mode hooks that `ibus-mode-map' is
-deactivated when invoking these hooks.")
+(defvar ibus-incompatible-major-modes
+  '(ebrowse-tree-mode w3m-mode)
+  "List of symbols specifying major modes that keymaps of ibus-mode are
+deactivated.")
 
 (defvar ibus-preedit-incompatible-commands
   '(undo undo-only redo undo-tree-undo undo-tree-redo)
@@ -1122,6 +1122,10 @@ use either \\[customize] or the function `ibus-mode'."
   (if ibus-mode
       (ibus-switch-keymap nil))
   (setq ibus-mode-map-disabled t))
+
+(defun ibus-check-major-mode ()
+  (if (memq major-mode ibus-incompatible-major-modes)
+      (ibus-disable-keymap)))
 
 (defun ibus-make-keymap-internal (keys &optional parent &rest ranges)
   (let ((map (if ranges (make-keymap) (make-sparse-keymap))))
@@ -2776,12 +2780,18 @@ i.e. input focus is in this window."
 	(ibus-activate-advice-describe-key t)
 	(ibus-setup-isearch)
 	;; Initialize key bindings
+	(mapc (lambda (buffer)
+		(with-current-buffer buffer
+		  (if (memq major-mode ibus-incompatible-major-modes)
+		      (setq ibus-mode-map-disabled t))))
+	      (buffer-list))
 	(ibus-update-key-bindings)
 	(ibus-set-mode-map-alist)
 	(add-to-ordered-list
 	 'emulation-mode-map-alists 'ibus-mode-map-alist 50)
 	;; Setup hooks
 	(add-hook 'minibuffer-exit-hook 'ibus-exit-minibuffer-function)
+	(add-hook 'after-change-major-mode-hook 'ibus-check-major-mode)
 	(add-hook 'ediff-startup-hook 'ibus-check-current-buffer)
 	(add-hook 'post-command-hook 'ibus-check-current-buffer)
 	(ibus-log "post-command-hook: %s" post-command-hook)
@@ -2800,6 +2810,7 @@ i.e. input focus is in this window."
   (remove-hook 'after-make-frame-functions 'ibus-after-make-frame-function)
   (remove-hook 'post-command-hook 'ibus-check-current-buffer)
   (remove-hook 'ediff-startup-hook 'ibus-check-current-buffer)
+  (remove-hook 'after-change-major-mode-hook 'ibus-check-major-mode)
   (remove-hook 'minibuffer-exit-hook 'ibus-exit-minibuffer-function)
   (setq emulation-mode-map-alists
 	(delq 'ibus-mode-map-alist emulation-mode-map-alists))
