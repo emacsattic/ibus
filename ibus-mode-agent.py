@@ -6,7 +6,7 @@
 
 # Author: S. Irie
 # Maintainer: S. Irie
-# Version: 0.0.2.13
+# Version: 0.0.2.14
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -113,8 +113,14 @@ class IBusModeIMContext(ibus.InputContext):
         self.connect('cursor-down-lookup-table', self.__cursor_down_lookup_table_cb)
         self.connect('enabled', self.__enabled_cb)
         self.connect('disabled', self.__disabled_cb)
-#        self.connect('delete-surrounding-text', self.__delete_surrounding_text_cb)
-#        self.connect('forward-key-event', self.__forward_key_event_cb)
+        try:
+            self.connect('forward-key-event', self.__forward_key_event_cb)
+        except TypeError:
+            pass
+        try:
+            self.connect('delete-surrounding-text', self.__delete_surrounding_text_cb)
+        except TypeError:
+            pass
 
     # Callbacks
 
@@ -182,14 +188,14 @@ class IBusModeIMContext(ibus.InputContext):
     def __disabled_cb(self, ic):
         print '(ibus-status-changed-cb %d nil)'%ic.id_no
 
-    def __delete_surrounding_text_cb(self, ic, offset, n_chars):
-        print '(ibus-delete-surrounding-text-cb %d %d %d)'% \
-            (ic.id_no, offset, n_chars)
-
     def __forward_key_event_cb(self, ic, keyval, keycode, modifiers):
         print '(ibus-forward-key-event-cb %d %d %d %s)'% \
             (ic.id_no, keyval, modifiers & ~modifier.RELEASE_MASK,
              lisp_boolean(modifiers & modifier.RELEASE_MASK == 0))
+
+    def __delete_surrounding_text_cb(self, ic, offset, n_chars):
+        print '(ibus-delete-surrounding-text-cb %d %d %d)'% \
+            (ic.id_no, offset, n_chars)
 
 ########################################################################
 # Process methods from client
