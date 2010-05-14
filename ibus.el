@@ -6,7 +6,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.0.2.17")
+(defconst ibus-mode-version "0.0.2.18")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -1537,7 +1537,7 @@ i.e. input focus is in this window."
     (setq ibus-agent-process (cdr (assoc display ibus-agent-process-alist)))
     (if ibus-agent-process
 	(setq ibus-selected-display display)
-      (ibus-agent-start)
+      (ibus-agent-connect)
       (if (and ibus-agent-process
 ;	       (equal display ":0.0") ; debug code
 	       (memq (process-status ibus-agent-process)
@@ -1896,6 +1896,18 @@ i.e. input focus is in this window."
 	  (add-hook 'after-change-functions
 		    'ibus-agent-receive-passively nil t))))))
 
+(defun ibus-agent-connect ()
+  (ibus-agent-start)
+  (condition-case err
+      (let ((ibus-current-buffer (current-buffer))
+	    connected)
+	(while (not connected)
+	  ;; Agent returns `(setq connected t)' if connection is established
+	  (ibus-agent-receive)))
+    (error
+     (ibus-message "%S: %S" (car err) (cdr err))
+     (ibus-agent-kill))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Communicate with agent
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2003,7 +2015,8 @@ i.e. input focus is in this window."
     (while sexplist
       (let ((sexp (pop sexplist)))
 	(if (and (consp sexp)
-		 (functionp (car sexp)))
+		 (symbolp (car sexp))
+		 (fboundp (car sexp)))
 	    (push sexp rsexplist)
 	  (ibus-log "ignore: %S" sexp))))
     (when rsexplist
@@ -2763,7 +2776,7 @@ i.e. input focus is in this window."
 	    ibus-agent-process-alist)
       (if process-live-p (ibus-mode-off))) ; Restart ibus-mode
     (unwind-protect
-	(ibus-agent-start)
+	(ibus-agent-connect)
       (if (not (and ibus-agent-process
 		    (memq (process-status ibus-agent-process)
 			  '(open run))))

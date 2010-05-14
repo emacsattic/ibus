@@ -6,7 +6,7 @@
 
 # Author: S. Irie
 # Maintainer: S. Irie
-# Version: 0.0.2.14
+# Version: 0.0.2.18
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -58,6 +58,7 @@ from ibus import modifier
 
 try:
     bus = ibus.Bus()
+    print '(setq connected t)'
 except TypeError:
     import os
     import time
@@ -66,10 +67,10 @@ except TypeError:
             time.sleep(0.5)
             try:
                 bus = ibus.Bus()
-            except:
-                pass
-            else:
+                print '(setq connected t)'
                 break
+            except TypeError:
+                pass
         else:
             print '(error "Failed to connect with ibus-daemon")'
             exit(1)
