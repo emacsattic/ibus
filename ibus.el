@@ -6,7 +6,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.0.2.18")
+(defconst ibus-mode-version "0.0.2.19")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -376,6 +376,32 @@ the cursor is put to the tail of the preediting area."
   "Advanced settings"
   :group 'ibus)
 
+(defcustom ibus-agent-command
+  (let ((dir-list `(,(file-name-directory load-file-name)
+		    "~/bin/"
+		    "/usr/local/bin/"
+		    "/usr/local/share/pyshared/ibus-mode/"
+		    "/usr/bin/"
+		    "/usr/share/pyshared/ibus-mode/"))
+	file-name)
+    (while dir-list
+      (setq file-name (concat (pop dir-list) "ibus-mode-agent.py"))
+      (if (file-exists-p file-name)
+	  (setq dir-list nil)))
+    file-name)
+  "Specify file name of the agent script of ibus-mode.
+If `ibus-python-command' is nil, the agent must be executable."
+  :type '(file :must-match t)
+  :group 'ibus-expert)
+
+(defcustom ibus-python-command "python"
+  "Specify shell command for executing Python interpreter, which is
+used for invoking ibus-mode-agent.py. nil means execute the agent
+directly as a shell command."
+  :type '(choice (const :tag "Execute agent directly (nil)" nil)
+		 (file :tag "Path of interpreter" :must-match t))
+  :group 'ibus-expert)
+
 (defcustom ibus-focus-update-interval 0.3
   "The window focus is checked with this cycle measured in seconds.
 When iBus is off or input focus is in the other application, the slower
@@ -420,9 +446,6 @@ the milliseconds."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; System settings
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defvar ibus-agent-command "/usr/share/pyshared/ibus-mode/ibus-mode-agent.py")
-(defvar ibus-python-command nil)
 
 (defvar ibus-debug nil)
 (defvar ibus-log-buffer "*ibus-mode log*")
