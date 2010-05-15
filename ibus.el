@@ -6,7 +6,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.0.2.21")
+(defconst ibus-mode-version "0.0.2.22")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -48,7 +48,7 @@
 ;;
 ;;   (require 'ibus)
 ;;   (add-hook 'after-init-hook 'ibus-mode-on)
-;;   (setq ibus-agent-command "/PATH/TO/ibus-mode-agent.py")
+;;   (setq ibus-agent-file-name "/PATH/TO/ibus-mode-agent.py")
 ;;
 ;; To disable XIM in Emacs, put the following in ~/.Xresources:
 ;;
@@ -65,7 +65,7 @@
 ;;   ;; Turn on ibus-mode automatically after loading .emacs
 ;;   (add-hook 'after-init-hook 'ibus-mode-on)
 ;;   ;; Specify file path of ibus-mode-agent.py
-;;   (setq ibus-agent-command "/PATH/TO/ibus-mode-agent.py")
+;;   (setq ibus-agent-file-name "/PATH/TO/ibus-mode-agent.py")
 ;;   ;; Use C-SPC for Set Mark command
 ;;   (ibus-define-common-key ?\C-\s nil)
 ;;   ;; Use C-/ for Undo command
@@ -376,7 +376,7 @@ the cursor is put to the tail of the preediting area."
   "Advanced settings"
   :group 'ibus)
 
-(defcustom ibus-agent-command
+(defcustom ibus-agent-file-name
   (let ((dir-list `(,(file-name-directory load-file-name)
 		    "~/bin/"
 		    "/usr/local/bin/"
@@ -390,11 +390,11 @@ the cursor is put to the tail of the preediting area."
 	  (setq dir-list nil)))
     file-name)
   "Specify file name of the agent script of ibus-mode.
-If `ibus-python-command' is nil, the agent must be executable."
+If `ibus-python-shell-command-name' is nil, the agent must be executable."
   :type '(file :must-match t)
   :group 'ibus-expert)
 
-(defcustom ibus-python-command "python"
+(defcustom ibus-python-shell-command-name "python"
   "Specify shell command for executing Python interpreter, which is
 used for invoking ibus-mode-agent.py. nil means execute the agent
 directly as a shell command."
@@ -1885,10 +1885,10 @@ i.e. input focus is in this window."
 		   (string-match "\\(\\**\\)$" ibus-agent-buffer-name)
 		   (replace-match (concat "(" display ")\\1")
 				  t nil ibus-agent-buffer-name))))
-    (if ibus-python-command
-	(start-process "ibus-agent" buffer ibus-python-command
-		       (expand-file-name ibus-agent-command))
-      (start-process "ibus-agent" buffer ibus-agent-command))))
+    (if ibus-python-shell-command-name
+	(start-process "ibus-agent" buffer ibus-python-shell-command-name
+		       (expand-file-name ibus-agent-file-name))
+      (start-process "ibus-agent" buffer ibus-agent-file-name))))
 
 (defun ibus-agent-start ()
   (if (and (processp ibus-agent-process)
