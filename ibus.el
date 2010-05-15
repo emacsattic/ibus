@@ -6,7 +6,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.0.2.20")
+(defconst ibus-mode-version "0.0.2.21")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -1964,13 +1964,20 @@ i.e. input focus is in this window."
 	  (goto-char (point-min))
 	  (while (let ((pos (point)))
 		   (condition-case err
-		       (push (read (current-buffer)) repl)
+		       ;; If `pos' reaches the end of buffer, `char-after'
+		       ;; returns nil so `=' causes `wrong-type-argument' error.
+		       (or (not (= (char-after) ?\())
+			   (push (read (current-buffer)) repl))
 		     (end-of-file
 		      (goto-char pos)
 		      nil)
-		     (invalid-read-syntax
+		     (error
 		      (goto-char (point-max))
-		      nil))))
+		      nil)))
+	    (let ((end (line-end-position)))
+	      (unless (= (point) end)
+		(push (buffer-substring-no-properties (point) end) repl))
+	      (beginning-of-line 2)))
 	  (delete-region (point-min) (point))
 	  (setq repl (nreverse repl))
 	  (setq unread-command-events
@@ -2037,11 +2044,16 @@ i.e. input focus is in this window."
   (let (rsexplist)
     (while sexplist
       (let ((sexp (pop sexplist)))
-	(if (and (consp sexp)
-		 (symbolp (car sexp))
-		 (fboundp (car sexp)))
-	    (push sexp rsexplist)
-	  (ibus-log "ignore: %S" sexp))))
+	(cond
+	 ((and (consp sexp)
+	       (symbolp (car sexp))
+	       (fboundp (car sexp)))
+	  (push sexp rsexplist))
+	 ((stringp sexp)
+	  (ibus-message "%s" sexp))
+	 (t
+	  (ibus-log "ignore: %S" sexp)
+	  ))))
     (when rsexplist
       (ibus-log "this-command: %s" this-command)
       (ibus-log "last-command: %s" last-command)
