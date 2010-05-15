@@ -6,7 +6,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.0.2.19")
+(defconst ibus-mode-version "0.0.2.20")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -1885,15 +1885,10 @@ i.e. input focus is in this window."
 		   (string-match "\\(\\**\\)$" ibus-agent-buffer-name)
 		   (replace-match (concat "(" display ")\\1")
 				  t nil ibus-agent-buffer-name))))
-    (condition-case err
-	(if ibus-python-command
-	    (start-process "ibus-agent" buffer
-			   ibus-python-command ibus-agent-command)
-	  (start-process "ibus-agent" buffer
-			 ibus-agent-command))
-      (error
-       (ibus-message "%S: %S" (car err) (cdr err))
-       nil))))
+    (if ibus-python-command
+	(start-process "ibus-agent" buffer ibus-python-command
+		       (expand-file-name ibus-agent-command))
+      (start-process "ibus-agent" buffer ibus-agent-command))))
 
 (defun ibus-agent-start ()
   (if (and (processp ibus-agent-process)
@@ -1909,7 +1904,6 @@ i.e. input focus is in this window."
 ;	(process-kill-without-query proc)
 	(set-process-query-on-exit-flag proc nil)
 	(set-process-coding-system proc 'utf-8 'utf-8)
-	(set-process-sentinel proc 'ibus-agent-process-sentinel)
 	(with-current-buffer (process-buffer proc)
 	  (ibus-log "temp buffer: %S" (current-buffer))
 	  (unless ibus-debug (buffer-disable-undo))
@@ -1920,13 +1914,19 @@ i.e. input focus is in this window."
 		    'ibus-agent-receive-passively nil t))))))
 
 (defun ibus-agent-connect ()
-  (ibus-agent-start)
   (condition-case err
-      (let ((ibus-current-buffer (current-buffer))
-	    connected)
-	(while (not connected)
-	  ;; Agent returns `(setq connected t)' if connection is established
-	  (ibus-agent-receive)))
+      (progn
+	(ibus-agent-start)
+	(let ((proc ibus-agent-process)
+	      (ibus-current-buffer (current-buffer))
+	      connected stat)
+	  (when (processp proc)
+	    (while (not connected)
+	      (unless (memq (setq stat (process-status proc)) '(open run))
+		(error "process: %s  status: %s" proc stat))
+	      ;; Agent returns `(setq connected t)' if connection is established
+	      (ibus-agent-receive)))
+	  (set-process-sentinel proc 'ibus-agent-process-sentinel)))
     (error
      (ibus-message "%S: %S" (car err) (cdr err))
      (ibus-agent-kill))))
