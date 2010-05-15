@@ -6,7 +6,7 @@
 
 # Author: S. Irie
 # Maintainer: S. Irie
-# Version: 0.0.2.23
+# Version: 0.0.2.24
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -219,7 +219,7 @@ def process_key_event(id_no, keyval, keycode, modifier_mask, pressed):
     if pressed:
         mask = modifier_mask
     else:
-        mask = modifier_mask & modifier.RELEASE_MASK
+        mask = modifier_mask | modifier.RELEASE_MASK
     handled = imcontexts[id_no].process_key_event(keyval, keycode, mask)
     print '(ibus-process-key-event-cb %d %s)'%(id_no, lisp_boolean(handled))
 

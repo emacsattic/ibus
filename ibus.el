@@ -6,7 +6,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.0.2.23")
+(defconst ibus-mode-version "0.0.2.24")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -2336,9 +2336,8 @@ i.e. input focus is in this window."
 		;; Thumb shift typing method
 		(ibus-wait-following-key-event event keyval modmask)
 	      (ibus-agent-send-key-event keyval modmask t))
-;	    (unless ibus-string-insertion-failed
-;	      (ibus-agent-send-key-event keyval modmask nil))
-	    )
+	    (unless ibus-string-insertion-failed
+	      (ibus-agent-send-key-event keyval modmask nil)))
 	;; IMContext is not registered or key event is not recognized
 	(ibus-process-key-event-cb ibus-imcontext-id nil))))
   ;; Repair post-command-hook
