@@ -6,7 +6,7 @@
 
 # Author: S. Irie
 # Maintainer: S. Irie
-# Version: 0.0.2.24
+# Version: 0.0.2.25
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -35,7 +35,7 @@
 # and clients can be written in any language with a dbus binding.
 
 # This program is iBus client for GNU Emacs. It is, however,
-# not part of official iBus distribution.
+# not part of official iBus project.
 
 # ChangeLog:
 
