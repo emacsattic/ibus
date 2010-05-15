@@ -6,7 +6,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.0.2.22")
+(defconst ibus-mode-version "0.0.2.23")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -2515,7 +2515,8 @@ i.e. input focus is in this window."
 	    (with-current-buffer ibus-current-buffer
 	      (when (numberp ibus-imcontext-id)
 		(when ibus-frame-focus
-		  (ibus-change-focus nil)) ; Send only
+		  (ibus-change-focus nil) ; Send
+		  (ibus-agent-receive)) ; Receive
 		(if ibus-preediting-p
 		    ;; Cleenup preedit if focus change become timeout
 		    (ibus-abort-preedit)))))

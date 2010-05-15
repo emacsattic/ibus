@@ -6,7 +6,7 @@
 
 # Author: S. Irie
 # Maintainer: S. Irie
-# Version: 0.0.2.18
+# Version: 0.0.2.23
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -231,6 +231,7 @@ def focus_in(id_no):
 
 def focus_out(id_no):
     imcontexts[id_no].focus_out()
+    print '()' # Dummy response
 
 def reset(id_no):
     imcontexts[id_no].reset()
