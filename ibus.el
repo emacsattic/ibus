@@ -6,7 +6,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.0.2.25")
+(defconst ibus-mode-version "0.0.2.26")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -1765,35 +1765,35 @@ i.e. input focus is in this window."
 	      flat-attr)
 	  (setq ibus-preedit-overlays nil)
 	  (when ibus-auxiliary-shown
-	    (let ((overlay (make-overlay ibus-preedit-point
-					 (+ ibus-preedit-point max))))
-	      (overlay-put overlay 'after-string
+	    (let ((ol (make-overlay ibus-preedit-point
+				    (+ ibus-preedit-point max))))
+	      (overlay-put ol 'after-string
 			   (propertize ibus-auxiliary-text 'face 'tooltip))
-	      (push overlay ibus-preedit-overlays)))
+	      (push ol ibus-preedit-overlays)))
 	  (while attrs
 	    (let* ((type (pop attrs))
 		   (value (pop attrs))
-		   (beg (pop attrs))
-		   (end (pop attrs))
-		   face priority)
+		   (beg (max (pop attrs) 0))
+		   (end (min (pop attrs) max))
+		   fc pr)
 ;	      (ibus-log "type: %s  val: %s  beg: %d  end: %d" type value begin end)
 	      (if (cond ((eq type 'foreground)
-			 (setq face (list :foreground (format "#%06x" value))
-			       priority 50))
+			 (setq fc (list :foreground (format "#%06x" value))
+			       pr 50))
 			((eq type 'background)
-			 (setq face (list :background (format "#%06x" value))
-			       priority 50))
+			 (setq fc (list :background (format "#%06x" value))
+			       pr 50))
 			((eq type 'underline)
-			 (setq face (list :underline (> value 0))
-			       priority 100)))
-		  (let ((overlay (make-overlay (+ ibus-preedit-point beg)
-					       (+ ibus-preedit-point end))))
-		    (overlay-put overlay 'face face)
-		    (overlay-put overlay 'priority priority)
-		    (push overlay ibus-preedit-overlays)
+			 (setq fc (list :underline (> value 0))
+			       pr 100)))
+		  (let ((ol (make-overlay (+ ibus-preedit-point beg)
+					  (+ ibus-preedit-point end))))
+		    (overlay-put ol 'face fc)
+		    (overlay-put ol 'priority pr)
+		    (push ol ibus-preedit-overlays)
 		    (setq flat-attr (if (and (listp flat-attr)
 					     (eq beg 0) (eq end max))
-					(cons face flat-attr)
+					(cons fc flat-attr)
 				      t)))
 		(ibus-message "Unable to set attribute %S %S." type value))))
 	  ;; This modification hook must be registered as a global hook because
@@ -2218,6 +2218,12 @@ i.e. input focus is in this window."
 	  (null ibus-last-command-event))
       ;; If key event is handled
       (when ibus-last-command-event
+	;; Send cursor location for displaying ibus-chewing candidate window
+	(when (and (not ibus-preedit-update)
+		   (string= ibus-preedit-prev-text "")
+		   (string= ibus-preedit-text ""))
+	  (let ((ibus-preedit-point (point)))
+	    (ibus-set-cursor-location)))
 	(setq ibus-last-command-event nil))
     ;; If key event is ignored
     (let* ((vec (vector ibus-last-command-event))

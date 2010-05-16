@@ -6,7 +6,7 @@
 
 # Author: S. Irie
 # Maintainer: S. Irie
-# Version: 0.0.2.25
+# Version: 0.0.2.26
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -51,6 +51,12 @@ import sys
 import glib
 import ibus
 from ibus import modifier
+
+try:
+    import Xlib.display
+    display = Xlib.display.Display()
+except ImportError:
+    display = None
 
 ########################################################################
 # Connect to iBus daemon
@@ -184,7 +190,10 @@ class IBusModeIMContext(ibus.InputContext):
         print '(ibus-log "cursor down lookup table")'
 
     def __enabled_cb(self, ic):
-        print '(ibus-status-changed-cb %d "%s")'%(ic.id_no, ic.get_engine().name)
+        engine_name = ic.get_engine().name
+        if not display and engine_name == "chewing":
+            print "python-xlib is required for using ibus-chewing"
+        print '(ibus-status-changed-cb %d "%s")'%(ic.id_no, engine_name)
 
     def __disabled_cb(self, ic):
         print '(ibus-status-changed-cb %d nil)'%ic.id_no
@@ -216,11 +225,13 @@ def destroy_imcontext(id_no):
     imcontexts[id_no] = None
 
 def process_key_event(id_no, keyval, keycode, modifier_mask, pressed):
-    if pressed:
-        mask = modifier_mask
+    if not pressed:
+        modifier_mask |= modifier.RELEASE_MASK
+    if display:
+        keycode = display.keysym_to_keycode(keyval) - 8
     else:
-        mask = modifier_mask | modifier.RELEASE_MASK
-    handled = imcontexts[id_no].process_key_event(keyval, keycode, mask)
+        keycode = 0
+    handled = imcontexts[id_no].process_key_event(keyval, keycode, modifier_mask)
     print '(ibus-process-key-event-cb %d %s)'%(id_no, lisp_boolean(handled))
 
 def set_cursor_location(id_no, x, y, w, h):
