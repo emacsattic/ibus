@@ -6,7 +6,7 @@
 
 # Author: S. Irie
 # Maintainer: S. Irie
-# Version: 0.0.2.26
+# Version: 0.0.2.27
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -224,7 +224,7 @@ def destroy_imcontext(id_no):
     imcontexts[id_no].destroy()
     imcontexts[id_no] = None
 
-def process_key_event(id_no, keyval, keycode, modifier_mask, pressed):
+def process_key_event(id_no, keyval, modifier_mask, pressed):
     if not pressed:
         modifier_mask |= modifier.RELEASE_MASK
     if display:

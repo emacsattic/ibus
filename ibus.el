@@ -6,7 +6,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.0.2.26")
+(defconst ibus-mode-version "0.0.2.27")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -2207,8 +2207,8 @@ i.e. input focus is in this window."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun ibus-agent-send-key-event (keyval modmask pressed)
-  (when (ibus-agent-send "process_key_event(%d, %d, %d, %d, %s)"
-			 ibus-imcontext-id keyval 0 modmask
+  (when (ibus-agent-send "process_key_event(%d, %d, %d, %s)"
+			 ibus-imcontext-id keyval modmask
 			 (if pressed "True" "False"))
     (if pressed (sit-for 0.001 t))
     (ibus-agent-receive)))
