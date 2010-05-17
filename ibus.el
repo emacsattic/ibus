@@ -6,7 +6,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.0.2.27")
+(defconst ibus-mode-version "0.0.2.28")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -1917,12 +1917,12 @@ i.e. input focus is in this window."
 	(ibus-agent-start)
 	(let ((proc ibus-agent-process)
 	      (ibus-current-buffer (current-buffer))
-	      connected stat)
+	      started stat)
 	  (when (processp proc)
-	    (while (not connected)
+	    (while (not started)
 	      (unless (memq (setq stat (process-status proc)) '(open run))
 		(error "process: %s  status: %s" proc stat))
-	      ;; Agent returns `(setq connected t)' if connection is established
+	      ;; Agent returns `(setq started t)' if successfully started
 	      (ibus-agent-receive)))
 	  (set-process-sentinel proc 'ibus-agent-process-sentinel)))
     (error

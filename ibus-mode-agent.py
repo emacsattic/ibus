@@ -6,7 +6,7 @@
 
 # Author: S. Irie
 # Maintainer: S. Irie
-# Version: 0.0.2.27
+# Version: 0.0.2.28
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -64,7 +64,6 @@ except ImportError:
 
 try:
     bus = ibus.Bus()
-    print '(setq connected t)'
 except TypeError:
     import os
     import time
@@ -73,7 +72,6 @@ except TypeError:
             time.sleep(0.5)
             try:
                 bus = ibus.Bus()
-                print '(setq connected t)'
                 break
             except TypeError:
                 pass
@@ -296,6 +294,12 @@ class IBusModeMainLoop(glib.MainLoop):
         print '(ibus-log "disconnected")'
         exit()
 
+    def __start_cb(self):
+        print '(setq started t)'
+        print 'Agent successfully started for display "%s"'% \
+            display.get_display_name()
+        return False
+
     def __stdin_cb(self, fd, condition):
         try:
             exec sys.stdin.readline()
@@ -305,6 +309,7 @@ class IBusModeMainLoop(glib.MainLoop):
         return True
 
     def run(self):
+        glib.idle_add(self.__start_cb)
         glib.io_add_watch(0, glib.IO_IN, self.__stdin_cb)
         while True:
             try:
