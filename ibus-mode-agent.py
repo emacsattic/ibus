@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# ibus-mode-agent.py --- helper program of iBus client for GNU Emacs
+# ibus-mode-agent.py --- helper program of IBus client for GNU Emacs
 # Copyright (c) 2009 and onwards, S. Irie
 
 # Author: S. Irie
@@ -23,19 +23,19 @@
 
 # Commentary:
 
-# iBus is a new input method framework under active development
+# IBus is a new input method framework under active development
 # which is designed to overcome the limitations of SCIM.
 
-# iBus uses D-Bus protocol for communication between the ibus-daemon
+# IBus uses D-Bus protocol for communication between the ibus-daemon
 # and clients (engines, panel, config tools). Since the components
 # run in separate processes there is enhanced modularity and stability.
 # Client processes can be loaded, started and stopped independently.
-# iBus supports Gtk2 and XIM, and has input method engines for anthy,
+# IBus supports Gtk2 and XIM, and has input method engines for anthy,
 # chewing, hangul, m17n, pinyin, rawcode, and large tables. Engines
 # and clients can be written in any language with a dbus binding.
 
-# This program is iBus client for GNU Emacs. It is, however,
-# not part of official iBus project.
+# This program is IBus client for GNU Emacs. It is, however,
+# not part of official IBus project.
 
 # ChangeLog:
 
@@ -59,7 +59,7 @@ except ImportError:
     display = None
 
 ########################################################################
-# Connect to iBus daemon
+# Connect to IBus daemon
 ########################################################################
 
 try:

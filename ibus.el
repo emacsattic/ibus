@@ -1,4 +1,4 @@
-;;; ibus.el -- iBus client for GNU Emacs
+;;; ibus.el -- IBus client for GNU Emacs
 
 ;; Copyright (C) 2010 S. Irie
 
@@ -6,7 +6,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.0.2.29")
+(defconst ibus-mode-version "0.0.2.30")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -23,19 +23,19 @@
 
 ;;; Commentary:
 
-;; iBus is a new input method framework under active development
+;; IBus is a new input method framework under active development
 ;; which is designed to overcome the limitations of SCIM.
 
-;; iBus uses D-Bus protocol for communication between the ibus-daemon
+;; IBus uses D-Bus protocol for communication between the ibus-daemon
 ;; and clients (engines, panel, config tools). Since the components
 ;; run in separate processes there is enhanced modularity and stability.
 ;; Client processes can be loaded, started and stopped independently.
-;; iBus supports Gtk2 and XIM, and has input method engines for anthy,
+;; IBus supports Gtk2 and XIM, and has input method engines for anthy,
 ;; chewing, hangul, m17n, pinyin, rawcode, and large tables. Engines
 ;; and clients can be written in any language with a dbus binding.
 
-;; This program is iBus client for GNU Emacs. It is, however,
-;; not part of official iBus project.
+;; This program is IBus client for GNU Emacs. It is, however,
+;; not part of official IBus project.
 
 ;;
 ;; Installation:
@@ -70,7 +70,7 @@
 ;;   (ibus-define-common-key ?\C-\s nil)
 ;;   ;; Use C-/ for Undo command
 ;;   (ibus-define-common-key ?\C-/ nil)
-;;   ;; Change cursor color depending on iBus status
+;;   ;; Change cursor color depending on IBus status
 ;;   (setq ibus-cursor-color '("red" "blue" "limegreen"))
 ;;
 ;;
@@ -97,7 +97,7 @@
 ;;; User settings
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defgroup ibus nil
-  "Intelligent Input Bus (iBus)"
+  "Intelligent Input Bus (IBus)"
   :prefix "ibus-"
   :group 'editing :group 'wp)
 
@@ -115,7 +115,7 @@ Otherwise, the input method is globally toggled."
 
 (defcustom ibus-imcontext-temporary-for-minibuffer t
   "If non-nil, an one-time IMContext is used for a minibuffer so that
-the minibuffer always starts with iBus's input status off. This option
+the minibuffer always starts with IBus's input status off. This option
 is effective only when the option `ibus-mode-local' is active (non-nil)."
   :type 'boolean
   :group 'ibus-basic)
@@ -127,7 +127,7 @@ is effective only when the option `ibus-mode-local' is active (non-nil)."
       (ibus-setup-isearch)))
 
 (defcustom ibus-use-in-isearch-window t
-  "If non-nil, iBus can be used with isearch-mode. Otherwise, it can't."
+  "If non-nil, IBus can be used with isearch-mode. Otherwise, it can't."
   :set 'ibus-customize-isearch
   :type 'boolean
   :group 'ibus-basic)
@@ -182,7 +182,7 @@ is effective only when the option `ibus-mode-local' is active (non-nil)."
     (kp-7)
     (kp-8)
     (kp-9))
-  "This list indicates which keystrokes iBus takes over at both direct
+  "This list indicates which keystrokes IBus takes over at both direct
 insert mode and preediting mode. You can also add/remove the elements
 using the function `ibus-define-common-key'.
 NOTICE: Don't set prefix keys in this option, such as ESC and C-x.
@@ -227,7 +227,7 @@ If you do so, operating Emacs might become impossible."
     (delete)
     (kp-enter)
     (kp-tab))
-  "This list indicates which keystrokes iBus takes over when the
+  "This list indicates which keystrokes IBus takes over when the
 preediting area exists. You can also add/remove the elements using
 the function `ibus-define-preedit-key'."
   :set 'ibus-customize-key
@@ -256,10 +256,10 @@ system's keyboard configurations with a shell command `xmodmap'."
   :group 'ibus-basic)
 
 (defcustom ibus-simultaneous-pressing-time nil
-  "If you use Japanese thumb shift typing method on iBus-Anthy,
+  "If you use Japanese thumb shift typing method on IBus-Anthy,
 specify the time interval (in seconds) which is corresponding to
-`simultaneous pressing time' setting of iBus-Anthy. Two keystrokes
-within this time interval are sent to iBus as a simultaneous keystroke."
+`simultaneous pressing time' setting of IBus-Anthy. Two keystrokes
+within this time interval are sent to IBus as a simultaneous keystroke."
   :type '(choice (const :tag "none" nil)
 		 (number :tag "interval (sec.)" :value 0.1))
   :group 'ibus-basic)
@@ -294,9 +294,9 @@ with the mouse."
 (defcustom ibus-cursor-color
   nil
   "If the value is a string, it specifies the cursor color applied
-when iBus is on. If a cons cell, its car and cdr are the cursor colors
-which indicate that iBus is on and off, respectively. If a list, the
-first, second and third (if any) elements correspond to that iBus is
+when IBus is on. If a cons cell, its car and cdr are the cursor colors
+which indicate that IBus is on and off, respectively. If a list, the
+first, second and third (if any) elements correspond to that IBus is
 on, off and disabled, respectively. The value nil means that the cursor
 color is not controlled at all."
   :set 'ibus-customize-cursor-color
@@ -402,7 +402,7 @@ directly as a shell command."
 
 (defcustom ibus-focus-update-interval 0.3
   "The window focus is checked with this cycle measured in seconds.
-When iBus is off or input focus is in the other application, the slower
+When IBus is off or input focus is in the other application, the slower
 time cycle given by `ibus-focus-update-interval-long' is used instead."
   :type 'number
   :group 'ibus-expert)
@@ -435,7 +435,7 @@ substitute KeySym for backslash key to distinguish it from yen-mark key."
   :group 'ibus-expert)
 
 (defcustom ibus-agent-timeout 3.0
-  "Specify the maximum waiting time for data reception from iBus.
+  "Specify the maximum waiting time for data reception from IBus.
 A floating point number means the number of seconds, otherwise an integer
 the milliseconds."
   :type 'number
@@ -454,7 +454,7 @@ the milliseconds."
 keyboard. When automatic detection doesn't go well, please set the
 value manually before ibus.el is loaded.")
 
-(defvar ibus-agent-buffer-name " *iBus*")
+(defvar ibus-agent-buffer-name " *IBus*")
 
 (defvar ibus-incompatible-major-modes
   '(ebrowse-tree-mode w3m-mode)
@@ -919,7 +919,7 @@ use either \\[customize] or the function `ibus-mode'."
       (ibus-log1 " 4th: %S" (list (nth 3 buffer-undo-list))))))
 
 (defun ibus-message (format-string &rest args)
-  (apply 'message (concat "iBus: " format-string) args)
+  (apply 'message (concat "IBus: " format-string) args)
   (apply 'ibus-log (concat "message: " format-string) args))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1035,7 +1035,7 @@ use either \\[customize] or the function `ibus-mode'."
 	   `(defadvice ,command
 	      (around ,(intern (concat "ibus-inhibit-" (symbol-name command))) ())
 	      (if ibus-preediting-p
-		  (error "iBus: `%s' cannot be used while preediting!" ',command)
+		  (error "IBus: `%s' cannot be used while preediting!" ',command)
 		ad-do-it))))
 	ibus-preedit-incompatible-commands))
 
@@ -1280,8 +1280,8 @@ use either \\[customize] or the function `ibus-mode'."
     (symbol-value symbol))) ; Return value
 
 (defun ibus-define-common-key (key handle)
-  "Specify which key events iBus anytime takes over. If HANDLE
-is non-nil, iBus handles the key events given by KEY. When KEY is
+  "Specify which key events IBus anytime takes over. If HANDLE
+is non-nil, IBus handles the key events given by KEY. When KEY is
 given as an array, it doesn't indicate key sequence, but multiple
 definitions of single keystroke.
  It is necessary to call a function `ibus-update-key-bindings' or
@@ -1289,8 +1289,8 @@ restart ibus-mode so that this settings may become effective."
   (ibus-define-key 'ibus-common-function-key-list key handle))
 
 (defun ibus-define-preedit-key (key handle)
-  "Specify which key events iBus takes over when preediting. If
-HANDLE is non-nil, iBus handles the key events given by KEY. When
+  "Specify which key events IBus takes over when preediting. If
+HANDLE is non-nil, IBus handles the key events given by KEY. When
 KEY is given as an array, it doesn't indicate key sequence, but
 multiple definitions of single keystroke.
  It is necessary to call a function `ibus-update-key-bindings' or
@@ -1335,7 +1335,7 @@ restart ibus-mode so that this settings may become effective."
     ;; Add descriptions to *Help* buffer, if any
     (with-current-buffer (help-buffer)
       (let* ((raw (vector (aref (this-single-command-raw-keys) 0)))
-	     (format (format "iBus: ibus-mode handles %s when %%s.\n"
+	     (format (format "IBus: ibus-mode handles %s when %%s.\n"
 			     (key-description raw)))
 	     (preedit (lookup-key ibus-mode-preedit-map raw))
 	     (common (lookup-key ibus-mode-common-map raw))
@@ -1357,9 +1357,9 @@ restart ibus-mode so that this settings may become effective."
 	  (if (or preedit common)
 	      (insert (format format "preediting")))
 	  (if common
-	      (insert (format format "iBus is active")))
+	      (insert (format format "IBus is active")))
 	  (if minimum
-	      (insert (format format "iBus is not active")))
+	      (insert (format format "IBus is not active")))
 	  (insert "\n")))))))
 
 (defun ibus-activate-advice-describe-key (enable)
@@ -1384,7 +1384,7 @@ restart ibus-mode so that this settings may become effective."
   (let ((status (cdr (assoc ibus-selected-display
 			    (nth 2 (assq ibus-buffer-group
 					 ibus-buffer-group-alist))))))
-    (concat " iBus" (and status (format "[%s]" status)))))
+    (concat " IBus" (and status (format "[%s]" status)))))
 
 ;; Cursor color
 
@@ -2340,7 +2340,7 @@ i.e. input focus is in this window."
 	(kill-local-variable 'post-command-hook)))
     (unless (memq 'ibus-check-current-buffer
 		  (default-value 'post-command-hook))
-      (if (y-or-n-p "iBus: `post-command-hook' was reset for some reasons. Try to repair this? ")
+      (if (y-or-n-p "IBus: `post-command-hook' was reset for some reasons. Try to repair this? ")
 	  (add-hook 'post-command-hook 'ibus-check-current-buffer)
 	(ibus-mode-off)))))
 
@@ -2641,7 +2641,7 @@ i.e. input focus is in this window."
       (exit-minibuffer))))
 
 (defun ibus-isearch-read-string-post-function ()
-  (ibus-log "isearch: exit iBus input")
+  (ibus-log "isearch: exit IBus input")
   (remove-hook 'post-command-hook 'ibus-isearch-check-preedit)
   (remove-hook 'minibuffer-exit-hook 'ibus-isearch-read-string-post-function t)
   (ibus-isearch-start)
@@ -2650,7 +2650,7 @@ i.e. input focus is in this window."
       (ibus-destroy-imcontext))))
 
 (defun ibus-isearch-read-string-pre-function ()
-  (ibus-log "isearch: start iBus input")
+  (ibus-log "isearch: start IBus input")
   (remove-hook 'post-command-hook 'ibus-isearch-read-string-pre-function)
   (add-hook 'post-command-hook 'ibus-isearch-check-preedit t)
   (add-hook 'minibuffer-exit-hook 'ibus-isearch-read-string-post-function nil t)
@@ -2702,7 +2702,7 @@ i.e. input focus is in this window."
 (defadvice isearch-printing-char
   (around ibus-isearch-printing-char ())
   (if ibus-imcontext-status
-      (let ((current-input-method "iBus"))
+      (let ((current-input-method "IBus"))
 	ad-do-it)
     ad-do-it))
 
@@ -2721,8 +2721,8 @@ i.e. input focus is in this window."
   (if (and ibus-imcontext-status
 	   (not nonincremental)
 	   (not (eq this-command 'isearch-edit-string)))
-      (let ((current-input-method "iBus")
-	    (current-input-method-title "iBus"))
+      (let ((current-input-method "IBus")
+	    (current-input-method-title "IBus"))
 	ad-do-it)
     ad-do-it))
 
@@ -2742,21 +2742,21 @@ i.e. input focus is in this window."
 
 (defadvice isearch-process-search-multibyte-characters
   (around ibus-isearch-process-search-characters ())
-  (if (and (string= current-input-method "iBus")
+  (if (and (string= current-input-method "IBus")
 	   (eq this-command 'isearch-printing-char))
       (ibus-isearch-process-search-characters last-char)
     ad-do-it))
 
 ;; Commands and functions
 (defun ibus-enable-isearch ()
-  "Make iBus usable with isearch-mode."
+  "Make IBus usable with isearch-mode."
   (interactive)
   (add-hook 'isearch-mode-hook 'ibus-isearch-start)
   (ad-enable-regexp "^ibus-isearch-")
   (ad-activate-regexp "^ibus-isearch-"))
 
 (defun ibus-disable-isearch ()
-  "Make iBus not usable with isearch-mode."
+  "Make IBus not usable with isearch-mode."
   (interactive)
   (remove-hook 'isearch-mode-hook 'ibus-isearch-start)
   (ad-disable-regexp "^ibus-isearch-")
@@ -2898,7 +2898,7 @@ i.e. input focus is in this window."
     (ibus-mode-off)))
 
 (defun ibus-mode (&optional arg)
-  "Toggle iBus minor mode (ibus-mode).
+  "Toggle IBus minor mode (ibus-mode).
 With optional argument ARG, turn ibus-mode on if ARG is
 positive, otherwise turn it off."
   (interactive "P")
@@ -2925,7 +2925,7 @@ positive, otherwise turn it off."
 
 ;; mode-line-mode-menu
 (define-key mode-line-mode-menu [ibus-mode]
-  `(menu-item ,(purecopy "Intelligent Input Bus (iBus)") ibus-mode
+  `(menu-item ,(purecopy "Intelligent Input Bus (IBus)") ibus-mode
 	      :help "Support the input of various languages"
 	      :button (:toggle . (bound-and-true-p ibus-mode))))
 
