@@ -6,7 +6,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.0.2.28")
+(defconst ibus-mode-version "0.0.2.29")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -873,7 +873,6 @@ use either \\[customize] or the function `ibus-mode'."
 (defvar ibus-preedit-prev-curpos 0)
 (defvar ibus-preedit-attributes nil)
 (defvar ibus-preedit-prev-attributes nil)
-(defvar ibus-preedit-default-attr nil)
 (defvar ibus-preedit-overlays nil)
 (defvar ibus-auxiliary-text "")
 (defvar ibus-auxiliary-shown nil)
@@ -1729,10 +1728,7 @@ i.e. input focus is in this window."
       (if ibus-preediting-p
 	  (ibus-remove-preedit)
 	(if (eq window-system 'x)
-	    (ibus-frame-top-left-coordinates))
-	(unless ibus-surrounding-text-modified
-	  (ibus-log "cleanup base attribute")
-	  (setq ibus-preedit-default-attr nil)))
+	    (ibus-frame-top-left-coordinates)))
       ;; Put String
       (setq ibus-preediting-p (current-buffer))
       (setq ibus-keymap-overlay (make-overlay (point-min) (1+ (point-max)) nil nil t))
@@ -1762,7 +1758,7 @@ i.e. input focus is in this window."
 	;; Set attributes
 ;	(ibus-log "attributes: %s" attrs)
 	(let ((max (length text))
-	      flat-attr)
+	      highlight)
 	  (setq ibus-preedit-overlays nil)
 	  (when ibus-auxiliary-shown
 	    (let ((ol (make-overlay ibus-preedit-point
@@ -1782,7 +1778,8 @@ i.e. input focus is in this window."
 			       pr 50))
 			((eq type 'background)
 			 (setq fc (list :background (format "#%06x" value))
-			       pr 50))
+			       pr 50
+			       highlight t))
 			((eq type 'underline)
 			 (setq fc (list :underline (> value 0))
 			       pr 100)))
@@ -1790,24 +1787,13 @@ i.e. input focus is in this window."
 					  (+ ibus-preedit-point end))))
 		    (overlay-put ol 'face fc)
 		    (overlay-put ol 'priority pr)
-		    (push ol ibus-preedit-overlays)
-		    (setq flat-attr (if (and (listp flat-attr)
-					     (eq beg 0) (eq end max))
-					(cons fc flat-attr)
-				      t)))
+		    (push ol ibus-preedit-overlays))
 		(ibus-message "Unable to set attribute %S %S." type value))))
 	  ;; This modification hook must be registered as a global hook because
 	  ;; local hooks might be reset when major mode is changed.
 	  (add-hook 'before-change-functions 'ibus-before-change-function)
-	  (setq flat-attr (or flat-attr
-			      'none)
-		ibus-preedit-default-attr (or ibus-preedit-default-attr
-					      flat-attr))
-	  (ibus-log "default attr: %S" ibus-preedit-default-attr)
-	  (ibus-log "current attr: %S" flat-attr)
-	  (if (or (eq flat-attr t)
-		  (not (equal flat-attr ibus-preedit-default-attr))
-		  ibus-auxiliary-shown)
+	  (ibus-log "highlighted: %s" highlight)
+	  (if highlight
 	      ;; When conversion candidate is shown
 	      (progn
 		(unless (or (eq ibus-cursor-type-for-candidate 0)
@@ -2800,8 +2786,7 @@ i.e. input focus is in this window."
 	ibus-callback-queue nil
 	ibus-preediting-p nil
 	ibus-last-rejected-event nil
-	ibus-last-command nil
-	ibus-preedit-default-attr nil))
+	ibus-last-command nil))
 
 (defun ibus-mode-on ()
   (interactive)
