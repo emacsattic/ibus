@@ -6,7 +6,7 @@
 
 # Author: S. Irie
 # Maintainer: S. Irie
-# Version: 0.0.2.29
+# Version: 0.0.2.30
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -50,6 +50,7 @@
 import sys
 import glib
 import ibus
+from ibus import keysyms
 from ibus import modifier
 
 try:
@@ -222,9 +223,20 @@ def destroy_imcontext(id_no):
     imcontexts[id_no] = None
 
 def process_key_event(id_no, keyval, modmask, pressed):
-    keycode = display.keysym_to_keycodes(keyval)[0]
-    if keycode[1] & 1 != 0:
-        modmask |= modifier.SHIFT_MASK
+    if keyval == keysyms.yen:
+        keycode = (display.keysym_to_keycode(keysyms.bar), 0)
+    else:
+        if keyval == keysyms.backslash:
+            keycodes = display.keysym_to_keycodes(keyval)
+            while keycodes:
+                keycode = keycodes[0]
+                if keycode[0] != display.keysym_to_keycode(keysyms.bar):
+                    break
+                keycodes = keycodes[1:]
+        else:
+            keycode = display.keysym_to_keycodes(keyval)[0]
+        if keycode[1] & 1 != 0:
+            modmask |= modifier.SHIFT_MASK
     if not pressed:
         modmask |= modifier.RELEASE_MASK
     handled = imcontexts[id_no].process_key_event(keyval, keycode[0] - 8, modmask)
