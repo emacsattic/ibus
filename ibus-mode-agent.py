@@ -6,7 +6,7 @@
 
 # Author: S. Irie
 # Maintainer: S. Irie
-# Version: 0.0.2.30
+# Version: 0.0.2.31
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -49,6 +49,8 @@
 
 import sys
 import glib
+import re
+
 import ibus
 from ibus import keysyms
 from ibus import modifier
@@ -92,6 +94,11 @@ except TypeError:
 def lisp_boolean(boolean):
     return "t" if boolean else "nil"
 
+escape_regexp = re.compile(ur'(["\\])')
+
+def escape_string(string):
+    return escape_regexp.sub(ur'\\\1', string)
+
 ########################################################################
 # Input Context
 ########################################################################
@@ -133,7 +140,8 @@ class IBusModeIMContext(ibus.InputContext):
     # Callbacks
 
     def __commit_text_cb(self, ic, text):
-        print '(ibus-commit-text-cb %d "%s")'%(ic.id_no, text.text.encode("utf-8"))
+        print '(ibus-commit-text-cb %d "%s")'% \
+            (ic.id_no, escape_string(text.text).encode("utf-8"))
 
     def __update_preedit_text_cb(self, ic, text, cursor_pos, visible):
         attrs = ['%s %d %d %d'%
@@ -141,7 +149,7 @@ class IBusModeIMContext(ibus.InputContext):
                   attr.value & 0xffffff, attr.start_index, attr.end_index)
                  for attr in text.attributes]
         print '(ibus-update-preedit-text-cb %d "%s" %d %s %s)'% \
-            (ic.id_no, text.text.encode("utf-8"),
+            (ic.id_no, escape_string(text.text).encode("utf-8"),
              cursor_pos, lisp_boolean(visible), ' '.join(attrs))
 
     def __show_preedit_text_cb(self, ic):
@@ -152,7 +160,8 @@ class IBusModeIMContext(ibus.InputContext):
 
     def __update_auxiliary_text_cb(self, ic, text, visible):
         print '(ibus-update-auxiliary-text-cb %d "%s" %s)'% \
-            (ic.id_no, text.text.encode("utf-8"), lisp_boolean(visible))
+            (ic.id_no, escape_string(text.text).encode("utf-8"),
+             lisp_boolean(visible))
 
     def __show_auxiliary_text_cb(self, ic):
         print '(ibus-show-auxiliary-text-cb %d)'%(ic.id_no)
@@ -169,10 +178,10 @@ class IBusModeIMContext(ibus.InputContext):
 
     def __show_lookup_table_cb(self, ic):
         print "(ibus-show-lookup-table-cb %d '(%s) %s)"% \
-            (ic.id_no,
-             " ".join(map(lambda item : '"%s"'%item.text,
-                          ic.lookup_table.get_candidates_in_current_page())
-                      ).encode("utf-8"),
+            (ic.id_no, escape_string(
+                " ".join(map(lambda item : '"%s"'%item.text,
+                             ic.lookup_table.get_candidates_in_current_page())
+                         )).encode("utf-8"),
              ic.lookup_table.get_cursor_pos_in_current_page())
 
     def __hide_lookup_table_cb(self, ic):
