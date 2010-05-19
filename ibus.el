@@ -6,7 +6,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.0.2.30")
+(defconst ibus-mode-version "0.0.2.32")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -932,7 +932,8 @@ use either \\[customize] or the function `ibus-mode'."
 			(mapcar (lambda (mod)
 				  (cdr (assq mod ibus-modifier-alist)))
 				(event-modifiers event))))
-	(keyval (event-basic-type event)))
+	(keyval (event-basic-type event))
+	backslash)
     (if (numberp keyval)
 	(if (and (not (zerop (logand modmask 1))) ; 1 = 2^0 => Shift keys
 		 (>= keyval ?a)
@@ -942,13 +943,18 @@ use either \\[customize] or the function `ibus-mode'."
 	  (setq keyval
 		(or (cdr (assq keyval ibus-alt-modifier-alist))
 		    keyval)))
-      (setq keyval (or (and ibus-use-ja-onbiki-key
-			    ibus-ja-onbiki-key-symbol
-			    (eq keyval ibus-ja-onbiki-key-symbol)
-			    ?\xa5) ; ¥
-		       (cdr (assq keyval ibus-keyval-alist))
+      (if (and ibus-use-ja-onbiki-key
+	       ibus-ja-onbiki-key-symbol)
+	  (cond
+	   ((eq keyval ibus-ja-onbiki-key-symbol)
+	    (setq keyval ?\\
+		  backslash ?|))
+	   ((and (eq keyval ?\\)
+		 (eq scim-keyboard-layout 'jp106))
+	    (setq backslash ?_))))
+      (setq keyval (or (cdr (assq keyval ibus-keyval-alist))
 		       keyval)))
-    (cons keyval modmask)))
+    (list keyval modmask backslash)))
 
 (defun ibus-encode-event (keyval modmask)
   ;; Convert ibus keyval to Emacs event
@@ -2192,9 +2198,10 @@ i.e. input focus is in this window."
 ;; Process key events
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun ibus-agent-send-key-event (keyval modmask pressed)
-  (when (ibus-agent-send "process_key_event(%d, %d, %d, %s)"
+(defun ibus-agent-send-key-event (keyval modmask backslash pressed)
+  (when (ibus-agent-send "process_key_event(%d, %d, %d, %s, %s)"
 			 ibus-imcontext-id keyval modmask
+			 (or backslash "None")
 			 (if pressed "True" "False"))
     (if pressed (sit-for 0.001 t))
     (ibus-agent-receive)))
@@ -2285,9 +2292,9 @@ i.e. input focus is in this window."
       (overlay-put ibus-keymap-overlay 'keymap ibus-mode-preedit-map))
   (ibus-set-mode-map-alist))
 
-(defun ibus-wait-following-key-event (prev-event keyval modmask)
+(defun ibus-wait-following-key-event (prev-event keyval modmask backslash)
   (let ((event (read-event nil nil ibus-simultaneous-pressing-time)))
-    (ibus-agent-send-key-event keyval modmask t)
+    (ibus-agent-send-key-event keyval modmask backslash t)
     (when (and event
 	       (not ibus-string-insertion-failed))
       (if (or (eq event prev-event)
@@ -2299,14 +2306,15 @@ i.e. input focus is in this window."
 	  (ibus-process-key-event event))))))
 
 (defun ibus-process-key-event (event)
-  (let* ((pair (ibus-decode-event event))
-	 (keyval (car pair))
-	 (modmask (cdr pair)))
+  (let* ((decoded (ibus-decode-event event))
+	 (keyval (pop decoded))
+	 (modmask (pop decoded))
+	 (backslash (car decoded)))
     (when (numberp keyval)
       (unless ibus-frame-focus (ibus-check-frame-focus t))
       (ibus-check-current-buffer))
     (ibus-log "event: %s  keyval: %s  modmask: %s" event keyval modmask)
-    (when (eq keyval ?\xa5) ; ¥
+    (when (eq backslash ?|)
       (setq event (event-convert-list
 		   (append (event-modifiers event) (list ?\\))))
       (ibus-log "event: --> %s" event)
@@ -2324,10 +2332,10 @@ i.e. input focus is in this window."
 	    (if (and ibus-simultaneous-pressing-time
 		     ibus-imcontext-status)
 		;; Thumb shift typing method
-		(ibus-wait-following-key-event event keyval modmask)
-	      (ibus-agent-send-key-event keyval modmask t))
+		(ibus-wait-following-key-event event keyval modmask backslash)
+	      (ibus-agent-send-key-event keyval modmask backslash t))
 	    (unless ibus-string-insertion-failed
-	      (ibus-agent-send-key-event keyval modmask nil)))
+	      (ibus-agent-send-key-event keyval modmask backslash nil)))
 	;; IMContext is not registered or key event is not recognized
 	(ibus-process-key-event-cb ibus-imcontext-id nil))))
   ;; Repair post-command-hook
