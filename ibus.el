@@ -6,7 +6,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.0.2.32")
+(defconst ibus-mode-version "0.0.2.33")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -825,6 +825,7 @@ use either \\[customize] or the function `ibus-mode'."
 (defvar ibus-agent-process nil)
 (defvar ibus-agent-process-alist nil)
 (defvar ibus-callback-queue nil)
+(defvar ibus-agent-key-event-processed nil)
 (defvar ibus-selected-display nil)
 (defvar ibus-last-command-event nil)
 (defvar ibus-current-buffer nil)
@@ -2203,10 +2204,17 @@ i.e. input focus is in this window."
 			 ibus-imcontext-id keyval modmask
 			 (or backslash "None")
 			 (if pressed "True" "False"))
-    (if pressed (sit-for 0.001 t))
-    (ibus-agent-receive)))
+    (let ((time-limit (+ (float-time)
+			 (or (and (floatp ibus-agent-timeout)
+				  ibus-agent-timeout)
+			     (/ ibus-agent-timeout 1000.0))))
+	  (ibus-agent-key-event-processed nil))
+      (while (and (not ibus-agent-key-event-processed)
+		  (< (float-time) time-limit))
+	(ibus-agent-receive)))))
 
 (defun ibus-process-key-event-cb (ic handled)
+  (setq ibus-agent-key-event-processed t)
   (if (or handled
 	  (null ibus-last-command-event))
       ;; If key event is handled
