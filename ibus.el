@@ -6,7 +6,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.0.2.33")
+(defconst ibus-mode-version "0.0.2.34")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -1951,26 +1951,25 @@ i.e. input focus is in this window."
 	      (msec (and (integerp ibus-agent-timeout) ibus-agent-timeout)))
 	  (when (= (point-max) 1)
 	    (accept-process-output ibus-agent-process sec msec t))
-	  (ibus-log "receive:\n%s" (buffer-substring (point-min) (point-max)))
 	  (goto-char (point-min))
 	  (while (let ((pos (point)))
 		   (condition-case err
 		       ;; If `pos' reaches the end of buffer, `char-after'
 		       ;; returns nil so `=' causes `wrong-type-argument' error.
-		       (or (not (= (char-after) ?\())
-			   (push (read (current-buffer)) repl))
+		       (push (if (= (char-after) ?\()
+				 (read (current-buffer))
+			       (buffer-substring-no-properties (point)
+							       (line-end-position)))
+			     repl)
 		     (end-of-file
 		      (goto-char pos)
-		      nil)
+		      (accept-process-output ibus-agent-process sec msec t))
 		     (error
-		      (goto-char (point-max))
 		      nil)))
-	    (let ((end (line-end-position)))
-	      (unless (= (point) end)
-		(push (buffer-substring-no-properties (point) end) repl))
-	      (beginning-of-line 2)))
-	  (delete-region (point-min) (point))
+	    (beginning-of-line 2))
 	  (setq repl (nreverse repl))
+	  (ibus-log "receive:\n%s" (buffer-string))
+	  (erase-buffer)
 	  (setq unread-command-events
 		(delq 'ibus-receive-event
 		      (delq 'ibus-dummy-event unread-command-events))))
