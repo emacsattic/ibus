@@ -6,7 +6,7 @@
 
 # Author: S. Irie
 # Maintainer: S. Irie
-# Version: 0.0.2.35
+# Version: 0.0.2.36
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -222,14 +222,21 @@ imcontexts = []
 
 def create_imcontext():
     ic = IBusELInputContext()
-    imcontexts.append(ic)
-    ic.id_no = len(imcontexts)-1
+    try:
+        ic.id_no = imcontexts.index(None)
+        imcontexts[ic.id_no] = ic
+    except ValueError:
+        ic.id_no = len(imcontexts)
+        imcontexts.append(ic)
     ic.set_capabilities(int('101001',2))
     print '(ibus-create-imcontext-cb %d)'%ic.id_no
 
 def destroy_imcontext(id_no):
     imcontexts[id_no].destroy()
-    imcontexts[id_no] = None
+    if id_no == len(imcontexts) - 1:
+        imcontexts.pop()
+    else:
+        imcontexts[id_no] = None
 
 def process_key_event(id_no, keyval, modmask, backslash, pressed):
     if backslash:
