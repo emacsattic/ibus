@@ -6,7 +6,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.0.2.35")
+(defconst ibus-mode-version "0.0.2.36")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -1610,7 +1610,10 @@ i.e. input focus is in this window."
 		   ibus-ja-onbiki-x-keysym)
 	  (ibus-update-ja-onbiki-key nil t))
 	(ibus-set-keymap-parent)
-	(ibus-change-focus ibus-frame-focus) ; Send only
+	(ibus-change-focus ibus-frame-focus) ; Send
+	(unless (or ibus-frame-focus
+		    ibus-preediting-p)
+	  (ibus-agent-receive)) ; Receive
 	(when ibus-frame-focus
 	  (ibus-frame-top-left-coordinates)))
       (unless (or focus-in
@@ -2404,9 +2407,10 @@ i.e. input focus is in this window."
   (setq ibus-imcontext-id ic))
 
 (defun ibus-destroy-imcontext ()
-  (if (and (numberp ibus-imcontext-id)
-	   ibus-frame-focus)
-      (ibus-change-focus nil))
+  (when (and (numberp ibus-imcontext-id)
+	     ibus-frame-focus)
+    (ibus-change-focus nil)
+    (ibus-agent-receive))
   (let ((group (assq ibus-buffer-group ibus-buffer-group-alist)))
     (when (and group
 	       (null (setcar (nthcdr 3 group)
