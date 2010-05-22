@@ -6,7 +6,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.0.2.34")
+(defconst ibus-mode-version "0.0.2.35")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -42,13 +42,13 @@
 ;;
 ;; First, save this file as ibus.el and byte-compile in
 ;; a directory that is listed in load-path, and also save
-;; ibus-mode-agent.py somewhere in your system.
+;; ibus_el_agent.py somewhere in your system.
 ;;
 ;; Put the following in your .emacs file:
 ;;
 ;;   (require 'ibus)
 ;;   (add-hook 'after-init-hook 'ibus-mode-on)
-;;   (setq ibus-agent-file-name "/PATH/TO/ibus-mode-agent.py")
+;;   (setq ibus-agent-file-name "/PATH/TO/ibus_el_agent.py")
 ;;
 ;; To disable XIM in Emacs, put the following in ~/.Xresources:
 ;;
@@ -64,8 +64,8 @@
 ;;   (require 'ibus)
 ;;   ;; Turn on ibus-mode automatically after loading .emacs
 ;;   (add-hook 'after-init-hook 'ibus-mode-on)
-;;   ;; Specify file path of ibus-mode-agent.py
-;;   (setq ibus-agent-file-name "/PATH/TO/ibus-mode-agent.py")
+;;   ;; Specify file path of ibus_el_agent.py
+;;   (setq ibus-agent-file-name "/PATH/TO/ibus_el_agent.py")
 ;;   ;; Use C-SPC for Set Mark command
 ;;   (ibus-define-common-key ?\C-\s nil)
 ;;   ;; Use C-/ for Undo command
@@ -383,7 +383,7 @@ the cursor is put to the tail of the preediting area."
 		    "/usr/share/pyshared/ibus-mode/"))
 	file-name)
     (while dir-list
-      (setq file-name (concat (pop dir-list) "ibus-mode-agent.py"))
+      (setq file-name (concat (pop dir-list) "ibus_el_agent.py"))
       (if (file-exists-p file-name)
 	  (setq dir-list nil)))
     file-name)
@@ -394,7 +394,7 @@ If `ibus-python-shell-command-name' is nil, the agent must be executable."
 
 (defcustom ibus-python-shell-command-name "python"
   "Specify shell command for executing Python interpreter, which is
-used for invoking ibus-mode-agent.py. nil means execute the agent
+used for invoking ibus_el_agent.py. nil means execute the agent
 directly as a shell command."
   :type '(choice (const :tag "Execute agent directly (nil)" nil)
 		 (file :tag "Path of interpreter" :must-match t))

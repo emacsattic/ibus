@@ -1,12 +1,12 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# ibus-mode-agent.py --- helper program of IBus client for GNU Emacs
+# ibus_el_agent.py --- helper program of IBus client for GNU Emacs
 # Copyright (c) 2009 and onwards, S. Irie
 
 # Author: S. Irie
 # Maintainer: S. Irie
-# Version: 0.0.2.32
+# Version: 0.0.2.35
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -103,11 +103,11 @@ def escape_string(string):
 # Input Context
 ########################################################################
 
-class IBusModeIMContext(ibus.InputContext):
+class IBusELInputContext(ibus.InputContext):
 
     def __init__(self):
-        self.__path = bus.create_input_context("IBusModeIMContext")
-        super(IBusModeIMContext, self).__init__(bus, self.__path, True)
+        self.__path = bus.create_input_context("IBusELInputContext")
+        super(IBusELInputContext, self).__init__(bus, self.__path, True)
 
         self.id_no = 0
         self.lookup_table = None
@@ -221,7 +221,7 @@ class IBusModeIMContext(ibus.InputContext):
 imcontexts = []
 
 def create_imcontext():
-    ic = IBusModeIMContext()
+    ic = IBusELInputContext()
     imcontexts.append(ic)
     ic.id_no = len(imcontexts)-1
     ic.set_capabilities(int('101001',2))
