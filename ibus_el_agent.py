@@ -6,7 +6,7 @@
 
 # Author: S. Irie
 # Maintainer: S. Irie
-# Version: 0.0.2.36
+# Version: 0.0.2.38
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -105,7 +105,8 @@ def escape_string(string):
 
 class IBusELInputContext(ibus.InputContext):
 
-    def __init__(self):
+    def __init__(self, bus):
+        self.__bus = bus
         self.__path = bus.create_input_context("IBusELInputContext")
         super(IBusELInputContext, self).__init__(bus, self.__path, True)
 
@@ -221,7 +222,7 @@ class IBusELInputContext(ibus.InputContext):
 imcontexts = []
 
 def create_imcontext():
-    ic = IBusELInputContext()
+    ic = IBusELInputContext(bus)
     try:
         ic.id_no = imcontexts.index(None)
         imcontexts[ic.id_no] = ic
