@@ -6,7 +6,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.0.2.38")
+(defconst ibus-mode-version "0.0.2.39")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -2119,32 +2119,44 @@ i.e. input focus is in this window."
     (ibus-show-preedit t))))
 
 (defun ibus-hide-preedit-text-cb (id)
-  (setq ibus-preedit-shown nil
-	ibus-preedit-update t))
+  (if (not (= id ibus-imcontext-id))
+      (ibus-message "IMContext ID (%s) is mismatched." id)
+    (setq ibus-preedit-shown nil
+	  ibus-preedit-update t)))
 
 (defun ibus-show-preedit-text-cb (id)
-  (setq ibus-preedit-shown t
-	ibus-preedit-update t))
+  (if (not (= id ibus-imcontext-id))
+      (ibus-message "IMContext ID (%s) is mismatched." id)
+    (setq ibus-preedit-shown t
+	  ibus-preedit-update t)))
 
 (defun ibus-update-preedit-text-cb (id text cursor-pos visible &rest attributes)
-  (setq ibus-preedit-text text
-	ibus-preedit-curpos cursor-pos
-	ibus-preedit-shown visible
-	ibus-preedit-attributes attributes
-	ibus-preedit-update t))
+  (if (not (= id ibus-imcontext-id))
+      (ibus-message "IMContext ID (%s) is mismatched." id)
+    (setq ibus-preedit-text text
+	  ibus-preedit-curpos cursor-pos
+	  ibus-preedit-shown visible
+	  ibus-preedit-attributes attributes
+	  ibus-preedit-update t)))
 
 (defun ibus-hide-auxiliary-text-cb (id)
-  (setq ibus-auxiliary-shown nil
-	ibus-preedit-update t))
+  (if (not (= id ibus-imcontext-id))
+      (ibus-message "IMContext ID (%s) is mismatched." id)
+    (setq ibus-auxiliary-shown nil
+	  ibus-preedit-update t)))
 
 (defun ibus-show-auxiliary-text-cb (id)
-  (setq ibus-auxiliary-shown t
-	ibus-preedit-update t))
+  (if (not (= id ibus-imcontext-id))
+      (ibus-message "IMContext ID (%s) is mismatched." id)
+    (setq ibus-auxiliary-shown t
+	  ibus-preedit-update t)))
 
 (defun ibus-update-auxiliary-text-cb (id text visible)
-  (setq ibus-auxiliary-text text
-	ibus-auxiliary-shown visible
-	ibus-preedit-update t))
+  (if (not (= id ibus-imcontext-id))
+      (ibus-message "IMContext ID (%s) is mismatched." id)
+    (setq ibus-auxiliary-text text
+	  ibus-auxiliary-shown visible
+	  ibus-preedit-update t)))
 
 (defun ibus-hide-lookup-table-cb (id)
   (message nil))
