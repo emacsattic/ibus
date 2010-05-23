@@ -6,7 +6,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.0.2.36")
+(defconst ibus-mode-version "0.0.2.37")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -2391,7 +2391,7 @@ i.e. input focus is in this window."
 	(ibus-agent-send-receive "create_imcontext()")
 	(while (and (not (numberp ibus-imcontext-id))
 		    (< (float-time) time-limit))
-	  (sit-for 0.1)))
+	  (ibus-agent-receive)))
       (unless (numberp ibus-imcontext-id)
 	(ibus-mode-quit)
 	(error "Couldn't create imcontext. Turned off ibus-mode."))
