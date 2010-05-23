@@ -6,7 +6,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.0.2.37")
+(defconst ibus-mode-version "0.0.2.38")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -2083,9 +2083,9 @@ i.e. input focus is in this window."
        (setq table-inhibit-auto-fill-paragraph t)))
     (table--finish-delayed-tasks)))
 
-(defun ibus-commit-text-cb (ic text)
+(defun ibus-commit-text-cb (id text)
   (cond
-   ((not (= ic ibus-imcontext-id))
+   ((not (= id ibus-imcontext-id))
     (ibus-message "IMContext ID (%s) is mismatched." id))
    (isearch-mode
     (isearch-process-search-string text text))
@@ -2118,38 +2118,38 @@ i.e. input focus is in this window."
        (setq ibus-string-insertion-failed t)))
     (ibus-show-preedit t))))
 
-(defun ibus-hide-preedit-text-cb (ic)
+(defun ibus-hide-preedit-text-cb (id)
   (setq ibus-preedit-shown nil
 	ibus-preedit-update t))
 
-(defun ibus-show-preedit-text-cb (ic)
+(defun ibus-show-preedit-text-cb (id)
   (setq ibus-preedit-shown t
 	ibus-preedit-update t))
 
-(defun ibus-update-preedit-text-cb (ic text cursor-pos visible &rest attributes)
+(defun ibus-update-preedit-text-cb (id text cursor-pos visible &rest attributes)
   (setq ibus-preedit-text text
 	ibus-preedit-curpos cursor-pos
 	ibus-preedit-shown visible
 	ibus-preedit-attributes attributes
 	ibus-preedit-update t))
 
-(defun ibus-hide-auxiliary-text-cb (ic)
+(defun ibus-hide-auxiliary-text-cb (id)
   (setq ibus-auxiliary-shown nil
 	ibus-preedit-update t))
 
-(defun ibus-show-auxiliary-text-cb (ic)
+(defun ibus-show-auxiliary-text-cb (id)
   (setq ibus-auxiliary-shown t
 	ibus-preedit-update t))
 
-(defun ibus-update-auxiliary-text-cb (ic text visible)
+(defun ibus-update-auxiliary-text-cb (id text visible)
   (setq ibus-auxiliary-text text
 	ibus-auxiliary-shown visible
 	ibus-preedit-update t))
 
-(defun ibus-hide-lookup-table-cb (ic)
+(defun ibus-hide-lookup-table-cb (id)
   (message nil))
 
-(defun ibus-show-lookup-table-cb (ic current-table &optional selection)
+(defun ibus-show-lookup-table-cb (id current-table &optional selection)
   (message (let ((i 0))
 	     (mapconcat (lambda (candidate)
 			  (format (if (eq i selection) "%s.[%s]" "%s. %s ")
@@ -2162,10 +2162,10 @@ i.e. input focus is in this window."
   (goto-char end)
   (call-interactively '*table--cell-delete-region))
 
-(defun ibus-delete-surrounding-text-cb (ic offset length)
+(defun ibus-delete-surrounding-text-cb (id offset length)
   (cond
-   ((not (= ic ibus-imcontext-id))
-    (ibus-message "IMContext ID (%s) is mismatched." ic))
+   ((not (= id ibus-imcontext-id))
+    (ibus-message "IMContext ID (%s) is mismatched." id))
    (buffer-read-only
     (ibus-message "Buffer is read-only: %S" (current-buffer)))
    ((not ibus-string-insertion-failed)
@@ -2188,13 +2188,13 @@ i.e. input focus is in this window."
 	       ibus-string-insertion-failed t)))
       (ibus-show-preedit t)))))
 
-(defun ibus-forward-key-event-cb (ic keyval modmask &optional pressed)
+(defun ibus-forward-key-event-cb (id keyval modmask &optional pressed)
   (let ((event (ibus-encode-event keyval modmask)))
     (if event
 	(if pressed
 	    (setq unread-command-events (cons event unread-command-events)))
-      (if (not (= ic ibus-imcontext-id))
-	  (ibus-message "IMContext ID (%s) is mismatched." ic)
+      (if (not (= id ibus-imcontext-id))
+	  (ibus-message "IMContext ID (%s) is mismatched." id)
 	(ibus-agent-send-key-event keyval modmask pressed)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2215,7 +2215,7 @@ i.e. input focus is in this window."
 		  (< (float-time) time-limit))
 	(ibus-agent-receive)))))
 
-(defun ibus-process-key-event-cb (ic handled)
+(defun ibus-process-key-event-cb (id handled)
   (setq ibus-agent-key-event-processed t)
   (if (or handled
 	  (null ibus-last-command-event))
@@ -2403,8 +2403,8 @@ i.e. input focus is in this window."
 		    (nth 3 group)))
       (ibus-cleanup-preedit))))
 
-(defun ibus-create-imcontext-cb (ic)
-  (setq ibus-imcontext-id ic))
+(defun ibus-create-imcontext-cb (id)
+  (setq ibus-imcontext-id id))
 
 (defun ibus-destroy-imcontext ()
   (when (and (numberp ibus-imcontext-id)
@@ -2454,11 +2454,11 @@ i.e. input focus is in this window."
   (if ibus-imcontext-status
       (ibus-disabled-cb ibus-imcontext-id)))
 
-(defun ibus-status-changed-cb (ic status)
-  (if (not (= ic ibus-imcontext-id))
-      (ibus-message "IMContext ID (%s) is mismatched." ic)
+(defun ibus-status-changed-cb (id status)
+  (if (not (= id ibus-imcontext-id))
+      (ibus-message "IMContext ID (%s) is mismatched." id)
     (unless (string= ibus-preedit-prev-text "")
-      (ibus-commit-text-cb ic ibus-preedit-prev-text)
+      (ibus-commit-text-cb id ibus-preedit-prev-text)
       (ibus-cleanup-preedit))
     (setq ibus-imcontext-status status)
     (setcdr (assoc ibus-selected-display
