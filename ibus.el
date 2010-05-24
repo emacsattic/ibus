@@ -6,7 +6,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.0.2.40")
+(defconst ibus-mode-version "0.0.2.41")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -825,7 +825,7 @@ use either \\[customize] or the function `ibus-mode'."
 (defvar ibus-agent-process nil)
 (defvar ibus-agent-process-alist nil)
 (defvar ibus-callback-queue nil)
-(defvar ibus-agent-key-event-processed nil)
+(defvar ibus-agent-key-event-handled nil)
 (defvar ibus-selected-display nil)
 (defvar ibus-last-command-event nil)
 (defvar ibus-current-buffer nil)
@@ -2222,24 +2222,23 @@ i.e. input focus is in this window."
 			 (or (and (floatp ibus-agent-timeout)
 				  ibus-agent-timeout)
 			     (/ ibus-agent-timeout 1000.0))))
-	  (ibus-agent-key-event-processed nil))
-      (while (and (not ibus-agent-key-event-processed)
+	  (ibus-agent-key-event-handled nil))
+      (while (and (null ibus-agent-key-event-handled)
 		  (< (float-time) time-limit))
-	(ibus-agent-receive)))))
+	(ibus-agent-receive))
+      (when (and (car ibus-agent-key-event-handled)
+		 (string= ibus-preedit-prev-text ""))
+	;; Send cursor location for displaying candidate window without preedit
+	(let ((ibus-preedit-point (point)))
+	  (ibus-set-cursor-location))))))
 
 (defun ibus-process-key-event-cb (id handled)
-  (setq ibus-agent-key-event-processed t)
+  (setq ibus-agent-key-event-handled (list (and ibus-last-command-event
+						handled)))
   (if (or handled
 	  (null ibus-last-command-event))
       ;; If key event is handled
-      (when ibus-last-command-event
-	;; Send cursor location for displaying ibus-chewing candidate window
-	(when (and (not ibus-preedit-update)
-		   (string= ibus-preedit-prev-text "")
-		   (string= ibus-preedit-text ""))
-	  (let ((ibus-preedit-point (point)))
-	    (ibus-set-cursor-location)))
-	(setq ibus-last-command-event nil))
+      (setq ibus-last-command-event nil)
     ;; If key event is ignored
     (let* ((vec (vector ibus-last-command-event))
 	   (event (or (and (boundp 'local-function-key-map)
