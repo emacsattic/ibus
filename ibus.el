@@ -6,7 +6,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.0.2.44")
+(defconst ibus-mode-version "0.0.2.45")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -1708,8 +1708,7 @@ i.e. input focus is in this window."
 	ibus-preedit-shown nil
 	ibus-preedit-text ""
 	ibus-preedit-curpos 0
-	ibus-preedit-attributes nil
-	ibus-committed-text ""))
+	ibus-preedit-attributes nil))
 
 (defun ibus-show-preedit (&optional resume)
   (setq ibus-preedit-update nil)
