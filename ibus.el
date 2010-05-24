@@ -6,7 +6,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.0.2.45")
+(defconst ibus-mode-version "0.0.2.46")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -378,9 +378,9 @@ the cursor is put to the tail of the preediting area."
   (let ((dir-list `(,(file-name-directory load-file-name)
 		    "~/bin/"
 		    "/usr/local/bin/"
-		    "/usr/local/share/pyshared/ibus-mode/"
+		    "/usr/local/share/ibus-el/"
 		    "/usr/bin/"
-		    "/usr/share/pyshared/ibus-mode/"))
+		    "/usr/share/ibus-el/"))
 	file-name)
     (while dir-list
       (setq file-name (concat (pop dir-list) "ibus_el_agent.py"))
