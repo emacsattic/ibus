@@ -6,7 +6,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.0.2.39")
+(defconst ibus-mode-version "0.0.2.40")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -2207,7 +2207,7 @@ i.e. input focus is in this window."
 	    (setq unread-command-events (cons event unread-command-events)))
       (if (not (= id ibus-imcontext-id))
 	  (ibus-message "IMContext ID (%s) is mismatched." id)
-	(ibus-agent-send-key-event keyval modmask pressed)))))
+	(ibus-agent-send-key-event keyval modmask nil pressed)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Process key events
