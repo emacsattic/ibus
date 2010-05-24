@@ -6,7 +6,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.0.2.46")
+(defconst ibus-mode-version "0.0.2.47")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -48,6 +48,10 @@
 ;;
 ;;   (require 'ibus)
 ;;   (add-hook 'after-init-hook 'ibus-mode-on)
+;;
+;; If ibus.el and ibus_el_agent.py are saved in different
+;; directories, add a setting to the above as follows:
+;;
 ;;   (setq ibus-agent-file-name "/PATH/TO/ibus_el_agent.py")
 ;;
 ;; To disable XIM in Emacs, put the following in ~/.Xresources:
@@ -64,8 +68,6 @@
 ;;   (require 'ibus)
 ;;   ;; Turn on ibus-mode automatically after loading .emacs
 ;;   (add-hook 'after-init-hook 'ibus-mode-on)
-;;   ;; Specify file path of ibus_el_agent.py
-;;   (setq ibus-agent-file-name "/PATH/TO/ibus_el_agent.py")
 ;;   ;; Use C-SPC for Set Mark command
 ;;   (ibus-define-common-key ?\C-\s nil)
 ;;   ;; Use C-/ for Undo command
@@ -75,7 +77,7 @@
 ;;
 ;;
 ;; Note that this program requires GNU Emacs 22 or later, and
-;; doesn't work when X server is not running.
+;; works only when Emacs is running under X session.
 ;;
 
 ;;; History:
@@ -90,6 +92,7 @@
 ;; ToDo:
 
 ;;  * leim support
+;;  * performance issue
 
 ;;; Code:
 
