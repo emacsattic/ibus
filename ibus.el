@@ -6,7 +6,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.0.2.43")
+(defconst ibus-mode-version "0.0.2.44")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -2463,7 +2463,7 @@ i.e. input focus is in this window."
 	     (numberp ibus-imcontext-id))
     (ibus-agent-send-receive "disable(%d)" ibus-imcontext-id))
   (if ibus-imcontext-status
-      (ibus-disabled-cb ibus-imcontext-id)))
+      (ibus-status-changed-cb ibus-imcontext-id nil)))
 
 (defun ibus-status-changed-cb (id status)
   (if (not (= id ibus-imcontext-id))
