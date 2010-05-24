@@ -6,7 +6,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.0.2.42")
+(defconst ibus-mode-version "0.0.2.43")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -951,7 +951,7 @@ use either \\[customize] or the function `ibus-mode'."
 	    (setq keyval ?\\
 		  backslash ?|))
 	   ((and (eq keyval ?\\)
-		 (eq scim-keyboard-layout 'jp106))
+		 (eq ibus-keyboard-layout 'jp106))
 	    (setq backslash ?_))))
       (setq keyval (or (cdr (assq keyval ibus-keyval-alist))
 		       keyval)))
