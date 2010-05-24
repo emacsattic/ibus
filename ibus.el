@@ -1,3 +1,5 @@
+;;; -*- Mode: Emacs-Lisp ; Coding: utf-8 -*-
+
 ;;; ibus.el -- IBus client for GNU Emacs
 
 ;; Copyright (C) 2010 S. Irie
@@ -6,7 +8,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.0.2.47")
+(defconst ibus-mode-version "0.0.2.48")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
