@@ -8,7 +8,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.0.2.54")
+(defconst ibus-mode-version "0.0.2.55")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -1794,8 +1794,9 @@ i.e. input focus is in this window."
 			 (setq fc (list :background (format "#%06x" value))
 			       pr 50
 			       highlight t))
-			((eq type 'underline)
-			 (setq fc (list :underline (> value 0))
+			((and (eq type 'underline)
+			      (> value 0))
+			 (setq fc (list :underline t)
 			       pr 100)))
 		  (let ((ol (make-overlay (+ ibus-preedit-point beg)
 					  (+ ibus-preedit-point end))))
