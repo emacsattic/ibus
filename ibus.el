@@ -8,7 +8,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.0.2.48")
+(defconst ibus-mode-version "0.0.2.49")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -250,7 +250,7 @@ the function `ibus-define-preedit-key'."
 					(symbolp stringp))))
   :group 'ibus-basic)
 
-(defcustom ibus-use-ja-onbiki-key nil
+(defcustom ibus-use-kana-onbiki-key nil
   "If you use Japanese kana typing method with jp-106 keyboard, turn
 on (non-nil) this option to input a kana prolonged sound mark (`ー')
 without pushing the shift key.
@@ -420,7 +420,7 @@ See `ibus-focus-update-interval' for details."
   :type 'number
   :group 'ibus-expert)
 
-(defcustom ibus-ja-onbiki-x-keysym "F24"
+(defcustom ibus-kana-onbiki-x-keysym "F24"
   "When Japanese prolonged sound mark (onbiki) key is used, this
 option specifies the substitute KeySym name used in X window system for
 the key. This program sets the substitute KeySym for backslash key to
@@ -429,10 +429,10 @@ distinguish it from yen-mark key."
   :type 'string
   :group 'ibus-expert)
 
-(defcustom ibus-ja-onbiki-key-symbol 'f24
+(defcustom ibus-kana-onbiki-key-symbol 'f24
   "When Japanese prolonged sound mark (onbiki) key is used, this
 option specifies the event corresponding to the substitute KeySym given
-in `ibus-ja-onbiki-x-keysym' as a symbol. This program sets the
+in `ibus-kana-onbiki-x-keysym' as a symbol. This program sets the
 substitute KeySym for backslash key to distinguish it from yen-mark key."
   :set 'ibus-customize-key
   :type '(choice (symbol)
@@ -814,7 +814,7 @@ use either \\[customize] or the function `ibus-mode'."
 (defvar ibus-mode-map nil)
 (defvar ibus-mode-preedit-map nil)
 (defvar ibus-mode-common-map nil)
-(defvar ibus-mode-ja-onbiki-map nil)
+(defvar ibus-mode-kana-onbiki-map nil)
 (defvar ibus-mode-minimum-map nil)
 (defvar ibus-mode-map-alist nil)
 (defvar ibus-mode-map-disabled nil)
@@ -822,7 +822,7 @@ use either \\[customize] or the function `ibus-mode'."
 (defvar ibus-mode-map-prev-disabled nil)
 (make-variable-buffer-local 'ibus-mode-map-prev-disabled)
 (put 'ibus-mode-map-prev-disabled 'permanent-local t)
-(defvar ibus-ja-onbiki-prev-x-keysym nil)
+(defvar ibus-kana-onbiki-prev-x-keysym nil)
 (defvar ibus-keyboard-layout nil)
 (defvar ibus-keymap-overlay nil)
 
@@ -949,10 +949,10 @@ use either \\[customize] or the function `ibus-mode'."
 	  (setq keyval
 		(or (cdr (assq keyval ibus-alt-modifier-alist))
 		    keyval)))
-      (if (and ibus-use-ja-onbiki-key
-	       ibus-ja-onbiki-key-symbol)
+      (if (and ibus-use-kana-onbiki-key
+	       ibus-kana-onbiki-key-symbol)
 	  (cond
-	   ((eq keyval ibus-ja-onbiki-key-symbol)
+	   ((eq keyval ibus-kana-onbiki-key-symbol)
 	    (setq keyval ?\\
 		  backslash ?|))
 	   ((and (eq keyval ?\\)
@@ -968,11 +968,11 @@ use either \\[customize] or the function `ibus-mode'."
 		 (if (< keyval 128) keyval)))
 	(mods nil)
 	mask1 mod1)
-    (if (and ibus-use-ja-onbiki-key
-	     ibus-ja-onbiki-key-symbol
+    (if (and ibus-use-kana-onbiki-key
+	     ibus-kana-onbiki-key-symbol
 	     (eq bas ?\xa5) ; ¥
 	     (not ibus-mode-map-prev-disabled))
-	(setq bas ibus-ja-onbiki-key-symbol))
+	(setq bas ibus-kana-onbiki-key-symbol))
     (if (logand modmask 8) ; 8 = 2^3 => Alt keys
 	(setq bas (or (car (rassq bas ibus-alt-modifier-alist))
 		      bas)))
@@ -1093,42 +1093,42 @@ use either \\[customize] or the function `ibus-mode'."
 		       (ibus-log "use minimum keymap")
 		       ibus-mode-minimum-map))))
 
-(defun ibus-enable-ja-onbiki-key (&optional keysym)
-  (unless keysym (setq keysym ibus-ja-onbiki-x-keysym))
+(defun ibus-enable-kana-onbiki-key (&optional keysym)
+  (unless keysym (setq keysym ibus-kana-onbiki-x-keysym))
   (when keysym
     (ibus-log "enable Kana-RO key: %s" keysym)
     (shell-command-to-string
      (concat "xmodmap -pke | sed -n 's/\\(\\(=\\) backslash bar\\| backslash bar$\\)/\\2 "
 	     keysym " bar/gp' | xmodmap -"))
-    (setq ibus-ja-onbiki-prev-x-keysym keysym)))
+    (setq ibus-kana-onbiki-prev-x-keysym keysym)))
 
-(defun ibus-disable-ja-onbiki-key (&optional keysym)
-  (unless keysym (setq keysym ibus-ja-onbiki-prev-x-keysym))
+(defun ibus-disable-kana-onbiki-key (&optional keysym)
+  (unless keysym (setq keysym ibus-kana-onbiki-prev-x-keysym))
   (when keysym
     (ibus-log "disable Kana-RO key: %s" keysym)
     (shell-command-to-string
      (concat "xmodmap -pke | sed -n 's/\\(\\(=\\) " keysym " bar\\| " keysym
 	     " bar$\\)/\\2 backslash bar/gp' | xmodmap -"))
-    (setq ibus-ja-onbiki-prev-x-keysym nil)))
+    (setq ibus-kana-onbiki-prev-x-keysym nil)))
 
 (defun ibus-get-keyboard-layout ()
   (let ((xkb-rules (x-window-property "_XKB_RULES_NAMES" nil "STRING" 0 nil nil)))
     (if xkb-rules
 	(intern (cadr (split-string xkb-rules "\0" t))))))
 
-(defun ibus-update-ja-onbiki-key (&optional inhibit delayed)
+(defun ibus-update-kana-onbiki-key (&optional inhibit delayed)
   (when (eq ibus-keyboard-layout 'jp106)
     (if (and (not inhibit)
 	     ibus-imcontext-status
-	     ibus-use-ja-onbiki-key
-	     ibus-ja-onbiki-x-keysym
+	     ibus-use-kana-onbiki-key
+	     ibus-kana-onbiki-x-keysym
 	     ibus-frame-focus
 	     (not ibus-mode-map-prev-disabled))
 	(if delayed
 	    (let ((cycle ibus-focus-update-interval))
-	      (run-at-time (+ cycle 0.1) nil 'ibus-enable-ja-onbiki-key))
-	  (ibus-enable-ja-onbiki-key))
-      (ibus-disable-ja-onbiki-key))))
+	      (run-at-time (+ cycle 0.1) nil 'ibus-enable-kana-onbiki-key))
+	  (ibus-enable-kana-onbiki-key))
+      (ibus-disable-kana-onbiki-key))))
 
 (defun ibus-switch-keymap (enable)
   (if (and (not enable)
@@ -1138,10 +1138,10 @@ use either \\[customize] or the function `ibus-mode'."
   (ibus-update-cursor-color)
   (ibus-set-keymap-parent)
   (if (and ibus-imcontext-status
-	   ibus-use-ja-onbiki-key
-	   ibus-ja-onbiki-x-keysym
+	   ibus-use-kana-onbiki-key
+	   ibus-kana-onbiki-x-keysym
 	   ibus-frame-focus)
-      (ibus-update-ja-onbiki-key)))
+      (ibus-update-kana-onbiki-key)))
 
 (defun ibus-enable-keymap ()
   (interactive)
@@ -1195,17 +1195,17 @@ use either \\[customize] or the function `ibus-mode'."
 (defun ibus-make-minimum-map ()
   (ibus-make-keymap-internal ibus-common-function-key-list))
 
-(defun ibus-make-ja-onbiki-map ()
-  (ibus-make-keymap-internal (if (and ibus-use-ja-onbiki-key
-				      ibus-ja-onbiki-key-symbol)
+(defun ibus-make-kana-onbiki-map ()
+  (ibus-make-keymap-internal (if (and ibus-use-kana-onbiki-key
+				      ibus-kana-onbiki-key-symbol)
 				 (ibus-combine-modifiers
-				  ibus-ja-onbiki-key-symbol
+				  ibus-kana-onbiki-key-symbol
 				  '(meta control hyper super alt)))
 			     ibus-mode-minimum-map))
 
 (defun ibus-make-common-map ()
   (ibus-make-keymap-internal nil
-			     ibus-mode-ja-onbiki-map
+			     ibus-mode-kana-onbiki-map
 			     '(32 . 126)))
 
 (defun ibus-make-preedit-map ()
@@ -1217,25 +1217,25 @@ use either \\[customize] or the function `ibus-mode'."
   (when (and ibus-frame-focus
 	     (not ibus-mode-map-prev-disabled)
 	     (or (null symbol)
-		 (and (eq symbol 'ibus-use-ja-onbiki-key)
+		 (and (eq symbol 'ibus-use-kana-onbiki-key)
 		      ibus-imcontext-status
-		      ibus-ja-onbiki-x-keysym)
-		 (and (eq symbol 'ibus-ja-onbiki-x-keysym)
+		      ibus-kana-onbiki-x-keysym)
+		 (and (eq symbol 'ibus-kana-onbiki-x-keysym)
 		      ibus-imcontext-status
-		      ibus-use-ja-onbiki-key)))
-    (when (memq symbol '(nil ibus-ja-onbiki-x-keysym))
-      (ibus-update-ja-onbiki-key t))
-    (ibus-update-ja-onbiki-key))
+		      ibus-use-kana-onbiki-key)))
+    (when (memq symbol '(nil ibus-kana-onbiki-x-keysym))
+      (ibus-update-kana-onbiki-key t))
+    (ibus-update-kana-onbiki-key))
   (when (null symbol)
     (ibus-log "update ibus-mode-minimum-map")
     (if (keymapp ibus-mode-minimum-map)
 	(setcdr ibus-mode-minimum-map (cdr (ibus-make-minimum-map)))
       (setq ibus-mode-minimum-map (ibus-make-minimum-map))))
-  (when (memq symbol '(nil ibus-use-ja-onbiki-key ibus-ja-onbiki-key-symbol))
-    (ibus-log "update ibus-mode-ja-onbiki-map")
-    (if (keymapp ibus-mode-ja-onbiki-map)
-	(setcdr ibus-mode-ja-onbiki-map (cdr (ibus-make-ja-onbiki-map)))
-      (setq ibus-mode-ja-onbiki-map (ibus-make-ja-onbiki-map))))
+  (when (memq symbol '(nil ibus-use-kana-onbiki-key ibus-kana-onbiki-key-symbol))
+    (ibus-log "update ibus-mode-kana-onbiki-map")
+    (if (keymapp ibus-mode-kana-onbiki-map)
+	(setcdr ibus-mode-kana-onbiki-map (cdr (ibus-make-kana-onbiki-map)))
+      (setq ibus-mode-kana-onbiki-map (ibus-make-kana-onbiki-map))))
   (when (memq symbol '(nil ibus-common-function-key-list))
     (ibus-log "update ibus-mode-common-map")
     (if (keymapp ibus-mode-common-map)
@@ -1319,7 +1319,7 @@ restart ibus-mode so that this settings may become effective."
     ;; Translate Jananese kana RO key
     (if (commandp (lookup-key (ibus-make-keymap-internal
 			       (ibus-combine-modifiers
-				ibus-ja-onbiki-key-symbol
+				ibus-kana-onbiki-key-symbol
 				'(meta control hyper super alt)))
 			      key))
 	(let ((mods (event-modifiers (aref key 0))))
@@ -1611,9 +1611,9 @@ i.e. input focus is in this window."
 	(ibus-log "ibus-current-buffer: %S" ibus-current-buffer)
 	(if ibus-frame-focus
 	    (setq ibus-keyboard-layout (ibus-get-keyboard-layout)))
-	(when (and ibus-use-ja-onbiki-key
-		   ibus-ja-onbiki-x-keysym)
-	  (ibus-update-ja-onbiki-key nil t))
+	(when (and ibus-use-kana-onbiki-key
+		   ibus-kana-onbiki-x-keysym)
+	  (ibus-update-kana-onbiki-key nil t))
 	(ibus-set-keymap-parent)
 	(ibus-change-focus ibus-frame-focus) ; Send
 	(unless (or ibus-frame-focus
@@ -2481,9 +2481,9 @@ i.e. input focus is in this window."
 	    status)
     (ibus-update-cursor-color)
     (ibus-set-keymap-parent)
-    (when (and ibus-use-ja-onbiki-key
-	       ibus-ja-onbiki-x-keysym)
-      (ibus-update-ja-onbiki-key))))
+    (when (and ibus-use-kana-onbiki-key
+	       ibus-kana-onbiki-x-keysym)
+      (ibus-update-kana-onbiki-key))))
 
 (defun ibus-toggle ()
   (interactive)
@@ -2597,8 +2597,8 @@ i.e. input focus is in this window."
 		       (and (boundp 'viper-current-state)
 			    (eq viper-current-state 'vi-state)))
 		   (not (and isearch-mode
-			     ibus-use-ja-onbiki-key
-			     ibus-ja-onbiki-x-keysym)))
+			     ibus-use-kana-onbiki-key
+			     ibus-kana-onbiki-x-keysym)))
 	      (not ibus-mode-map-prev-disabled))
 	  (ibus-switch-keymap ibus-mode-map-prev-disabled))
       ;; Set/restore cursor shape
@@ -2718,8 +2718,8 @@ i.e. input focus is in this window."
 	  (setq unread-command-events (cons ?a unread-command-events))))))
 
 (defun ibus-isearch-other-control-char ()
-  (if (and ibus-use-ja-onbiki-key
-	   (eq (event-basic-type last-command-event) ibus-ja-onbiki-key-symbol))
+  (if (and ibus-use-kana-onbiki-key
+	   (eq (event-basic-type last-command-event) ibus-kana-onbiki-key-symbol))
       (setq unread-command-events
 	    (if ibus-imcontext-status
 		(append (list ?a 'ibus-resume-preedit last-command-event)
@@ -2890,7 +2890,7 @@ i.e. input focus is in this window."
   (remove-hook 'minibuffer-exit-hook 'ibus-exit-minibuffer-function)
   (setq emulation-mode-map-alists
 	(delq 'ibus-mode-map-alist emulation-mode-map-alists))
-  (ibus-update-ja-onbiki-key t)
+  (ibus-update-kana-onbiki-key t)
   (ibus-activate-advices-disable-for-preedit nil)
   (ibus-activate-advices-inherit-im nil)
   (ibus-activate-advice-describe-key nil)
