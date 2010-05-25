@@ -6,7 +6,7 @@
 
 # Author: S. Irie
 # Maintainer: S. Irie
-# Version: 0.0.2.52
+# Version: 0.0.2.56
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -52,7 +52,6 @@ import glib
 import re
 
 import ibus
-from ibus import keysyms
 from ibus import modifier
 
 try:
