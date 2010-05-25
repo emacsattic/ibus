@@ -8,7 +8,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.0.2.50")
+(defconst ibus-mode-version "0.0.2.51")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -2218,7 +2218,7 @@ i.e. input focus is in this window."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun ibus-agent-send-key-event (keyval modmask backslash pressed)
-  (when (ibus-agent-send "process_key_event(%d, %d, %d, %s, %s)"
+  (when (ibus-agent-send "process_key_event(%d, %d, 0x%x, %s, %s)"
 			 ibus-imcontext-id keyval modmask
 			 (or backslash "None")
 			 (if pressed "True" "False"))
