@@ -8,7 +8,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.0.2.53")
+(defconst ibus-mode-version "0.0.2.54")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -263,9 +263,8 @@ system's keyboard configurations with a shell command `xmodmap'."
 
 (defcustom ibus-simultaneous-pressing-time nil
   "If you use Japanese thumb shift typing method on IBus-Anthy,
-specify the time interval (in seconds) which is corresponding to
-`simultaneous pressing time' setting of IBus-Anthy. Two keystrokes
-within this time interval are sent to IBus as a simultaneous keystroke."
+specify the time interval in seconds. Two keystrokes within this time
+interval are sent to IBus as a simultaneous keystroke."
   :type '(choice (const :tag "none" nil)
 		 (number :tag "interval (sec.)" :value 0.1))
   :group 'ibus-basic)
