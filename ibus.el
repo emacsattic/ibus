@@ -8,7 +8,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.0.2.49")
+(defconst ibus-mode-version "0.0.2.50")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -1096,7 +1096,7 @@ use either \\[customize] or the function `ibus-mode'."
 (defun ibus-enable-kana-onbiki-key (&optional keysym)
   (unless keysym (setq keysym ibus-kana-onbiki-x-keysym))
   (when keysym
-    (ibus-log "enable Kana-RO key: %s" keysym)
+    (ibus-log "enable kana onbiki key: %s" keysym)
     (shell-command-to-string
      (concat "xmodmap -pke | sed -n 's/\\(\\(=\\) backslash bar\\| backslash bar$\\)/\\2 "
 	     keysym " bar/gp' | xmodmap -"))
@@ -1105,7 +1105,7 @@ use either \\[customize] or the function `ibus-mode'."
 (defun ibus-disable-kana-onbiki-key (&optional keysym)
   (unless keysym (setq keysym ibus-kana-onbiki-prev-x-keysym))
   (when keysym
-    (ibus-log "disable Kana-RO key: %s" keysym)
+    (ibus-log "disable kana onbiki key: %s" keysym)
     (shell-command-to-string
      (concat "xmodmap -pke | sed -n 's/\\(\\(=\\) " keysym " bar\\| " keysym
 	     " bar$\\)/\\2 backslash bar/gp' | xmodmap -"))
@@ -1316,7 +1316,7 @@ restart ibus-mode so that this settings may become effective."
    ((not ibus-mode)
     ad-do-it)
    ((null ibus-mode-map-alist)
-    ;; Translate Jananese kana RO key
+    ;; Translate Jananese kana onbiki key
     (if (commandp (lookup-key (ibus-make-keymap-internal
 			       (ibus-combine-modifiers
 				ibus-kana-onbiki-key-symbol
