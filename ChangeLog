@@ -1,0 +1,12 @@
+	* Version0.1.0
+	* First public release
+	* Added Multi-display support
+	* Added Japanese kana typing method support
+	* Added Japanese thumb shift typing method support
+	* Fixed a lot of bugs
+2010-05-09  IRIE Shinsuke <irieshinsuke@yahoo.co.jp>
+	* Version0.0.2
+	* Imported many functions from scim-bridge.el
+2010-04-12  IRIE Shinsuke <irieshinsuke@yahoo.co.jp>
+	* Version0.0.1
+	* Initial experimental version

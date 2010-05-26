@@ -1,0 +1,103 @@
+ibus.el README
+
+----------------------------------------------------------------------
+0. Introduction
+----------------------------------------------------------------------
+
+ibus.el is a IBus client for Emacs. This program allows users
+on-the-spot style input with IBus. The input statuses are individually
+kept for each buffer, and prefix-keys such as C-x and C-c can be used
+even if IBus is active. So you can input various languages fast and
+comfortably by using it.
+
+This program is *not* a part of IBus.
+
+----------------------------------------------------------------------
+1. License
+----------------------------------------------------------------------
+
+GNU General Public License version 3
+
+----------------------------------------------------------------------
+2. Requirement
+----------------------------------------------------------------------
+
+emacs22 | emacs23 | emacs-snapshot
+ibus (>= 1.2.0)
+python-ibus (>= 1.2.0)
+python-xlib
+
+----------------------------------------------------------------------
+3. Installation
+----------------------------------------------------------------------
+
+i) Common settings
+
+Save this file as ibus.el and byte-compile in a directory that is
+listed in load-path, and also save ibus_el_agent.py somewhere in
+your system.
+
+Put the following in your .emacs file:
+
+ (require 'ibus)
+ (add-hook 'after-init-hook 'ibus-mode-on)
+
+If ibus.el and ibus_el_agent.py are saved in different directories,
+add a setting to the above as follows:
+
+ (setq ibus-agent-file-name "/PATH/TO/ibus_el_agent.py")
+
+To disable XIM in Emacs, put the following in ~/.Xresources:
+
+ Emacs*useXIM: false
+
+and restart X session or execute a shell command:
+
+ xrdb ~/.Xresources
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+ii) Using ibus-anthy
+
+To using kana input method with jp106 keyboard, add the following to
+.emacs file:
+
+ (setq ibus-use-kana-onbiki-key t)
+
+If you'd like to use thumb shift input method, you must specify the
+simultaneous pressing time as:
+
+ (setq ibus-ibus-simultaneous-pressing-time 0.1)
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+iii) Using ibus-chewing
+
+Please set input style to "in application window" in ibus-chewing's
+configuration dialog.
+
+----------------------------------------------------------------------
+4. Web sites
+----------------------------------------------------------------------
+
+Home page (in Japanese):
+
+ http://www11.atwiki.jp/s-irie/pages/21.html
+
+Wiki:
+
+ http://www.emacswiki.org/emacs/IBus
+
+Development:
+
+ https://launchpad.net/ibus.el
+
+Bug tracker:
+
+ https://bugs.launchpad.net/ibus.el
+
+----------------------------------------------------------------------
+5. Author
+----------------------------------------------------------------------
+
+IRIE Shinsuke <irieshinsuke@yahoo.co.jp>
