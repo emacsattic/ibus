@@ -6,7 +6,7 @@
 
 # Author: S. Irie
 # Maintainer: S. Irie
-# Version: 0.0.2.56
+# Version: 0.0.2.57
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -112,107 +112,109 @@ class IBusELInputContext(ibus.InputContext):
         self.id_no = 0
         self.lookup_table = None
 
-        self.connect('commit-text', self.__commit_text_cb)
-        self.connect('update-preedit-text', self.__update_preedit_text_cb)
-        self.connect('show-preedit-text', self.__show_preedit_text_cb)
-        self.connect('hide-preedit-text', self.__hide_preedit_text_cb)
-        self.connect('update-auxiliary-text', self.__update_auxiliary_text_cb)
-        self.connect('show-auxiliary-text', self.__show_auxiliary_text_cb)
-        self.connect('hide-auxiliary-text', self.__hide_auxiliary_text_cb)
-        self.connect('update-lookup-table', self.__update_lookup_table_cb)
-        self.connect('show-lookup-table', self.__show_lookup_table_cb)
-        self.connect('hide-lookup-table', self.__hide_lookup_table_cb)
-        self.connect('page-up-lookup-table', self.__page_up_lookup_table_cb)
-        self.connect('page-down-lookup-table', self.__page_down_lookup_table_cb)
-        self.connect('cursor-up-lookup-table', self.__cursor_up_lookup_table_cb)
-        self.connect('cursor-down-lookup-table', self.__cursor_down_lookup_table_cb)
-        self.connect('enabled', self.__enabled_cb)
-        self.connect('disabled', self.__disabled_cb)
+        self.connect('commit-text', commit_text_cb)
+        self.connect('update-preedit-text', update_preedit_text_cb)
+        self.connect('show-preedit-text', show_preedit_text_cb)
+        self.connect('hide-preedit-text', hide_preedit_text_cb)
+        self.connect('update-auxiliary-text', update_auxiliary_text_cb)
+        self.connect('show-auxiliary-text', show_auxiliary_text_cb)
+        self.connect('hide-auxiliary-text', hide_auxiliary_text_cb)
+        self.connect('update-lookup-table', update_lookup_table_cb)
+        self.connect('show-lookup-table', show_lookup_table_cb)
+        self.connect('hide-lookup-table', hide_lookup_table_cb)
+        self.connect('page-up-lookup-table', page_up_lookup_table_cb)
+        self.connect('page-down-lookup-table', page_down_lookup_table_cb)
+        self.connect('cursor-up-lookup-table', cursor_up_lookup_table_cb)
+        self.connect('cursor-down-lookup-table', cursor_down_lookup_table_cb)
+        self.connect('enabled', enabled_cb)
+        self.connect('disabled', disabled_cb)
         try:
-            self.connect('forward-key-event', self.__forward_key_event_cb)
+            self.connect('forward-key-event', forward_key_event_cb)
         except TypeError:
             pass
         try:
-            self.connect('delete-surrounding-text', self.__delete_surrounding_text_cb)
+            self.connect('delete-surrounding-text', delete_surrounding_text_cb)
         except TypeError:
             pass
 
-    # Callbacks
+########################################################################
+# Callbacks
+########################################################################
 
-    def __commit_text_cb(self, ic, text):
-        print '(ibus-commit-text-cb %d "%s")'% \
-            (ic.id_no, escape_string(text.text).encode("utf-8"))
+def commit_text_cb(ic, text):
+    print '(ibus-commit-text-cb %d "%s")'% \
+        (ic.id_no, escape_string(text.text).encode("utf-8"))
 
-    def __update_preedit_text_cb(self, ic, text, cursor_pos, visible):
-        attrs = ['%s %d %d %d'%
-                 (["nil", "'underline", "'foreground", "'background"][attr.type],
-                  attr.value & 0xffffff, attr.start_index, attr.end_index)
-                 for attr in text.attributes]
-        print '(ibus-update-preedit-text-cb %d "%s" %d %s %s)'% \
-            (ic.id_no, escape_string(text.text).encode("utf-8"),
-             cursor_pos, lisp_boolean(visible), ' '.join(attrs))
+def update_preedit_text_cb(ic, text, cursor_pos, visible):
+    attrs = ['%s %d %d %d'%
+             (["nil", "'underline", "'foreground", "'background"][attr.type],
+              attr.value & 0xffffff, attr.start_index, attr.end_index)
+             for attr in text.attributes]
+    print '(ibus-update-preedit-text-cb %d "%s" %d %s %s)'% \
+        (ic.id_no, escape_string(text.text).encode("utf-8"),
+         cursor_pos, lisp_boolean(visible), ' '.join(attrs))
 
-    def __show_preedit_text_cb(self, ic):
-        print '(ibus-show-preedit-text-cb %d)'%(ic.id_no)
+def show_preedit_text_cb(ic):
+    print '(ibus-show-preedit-text-cb %d)'%(ic.id_no)
 
-    def __hide_preedit_text_cb(self, ic):
-        print '(ibus-hide-preedit-text-cb %d)'%(ic.id_no)
+def hide_preedit_text_cb(ic):
+    print '(ibus-hide-preedit-text-cb %d)'%(ic.id_no)
 
-    def __update_auxiliary_text_cb(self, ic, text, visible):
-        print '(ibus-update-auxiliary-text-cb %d "%s" %s)'% \
-            (ic.id_no, escape_string(text.text).encode("utf-8"),
-             lisp_boolean(visible))
+def update_auxiliary_text_cb(ic, text, visible):
+    print '(ibus-update-auxiliary-text-cb %d "%s" %s)'% \
+        (ic.id_no, escape_string(text.text).encode("utf-8"),
+         lisp_boolean(visible))
 
-    def __show_auxiliary_text_cb(self, ic):
-        print '(ibus-show-auxiliary-text-cb %d)'%(ic.id_no)
+def show_auxiliary_text_cb(ic):
+    print '(ibus-show-auxiliary-text-cb %d)'%(ic.id_no)
 
-    def __hide_auxiliary_text_cb(self, ic):
-        print '(ibus-hide-auxiliary-text-cb %d)'%(ic.id_no)
+def hide_auxiliary_text_cb(ic):
+    print '(ibus-hide-auxiliary-text-cb %d)'%(ic.id_no)
 
-    def __update_lookup_table_cb(self, ic, lookup_table, visible):
-        ic.lookup_table = lookup_table
-        if visible:
-            self.__show_lookup_table_cb(ic)
-        else:
-            self.__hide_lookup_table_cb(ic)
+def update_lookup_table_cb(ic, lookup_table, visible):
+    ic.lookup_table = lookup_table
+    if visible:
+        self.__show_lookup_table_cb(ic)
+    else:
+        self.__hide_lookup_table_cb(ic)
 
-    def __show_lookup_table_cb(self, ic):
-        print "(ibus-show-lookup-table-cb %d '(%s) %s)"% \
-            (ic.id_no, escape_string(
-                " ".join(map(lambda item : '"%s"'%item.text,
-                             ic.lookup_table.get_candidates_in_current_page())
-                         )).encode("utf-8"),
-             ic.lookup_table.get_cursor_pos_in_current_page())
+def show_lookup_table_cb(ic):
+    print "(ibus-show-lookup-table-cb %d '(%s) %s)"% \
+        (ic.id_no, escape_string(
+            " ".join(map(lambda item : '"%s"'%item.text,
+                         ic.lookup_table.get_candidates_in_current_page())
+                     )).encode("utf-8"),
+         ic.lookup_table.get_cursor_pos_in_current_page())
 
-    def __hide_lookup_table_cb(self, ic):
-        print '(ibus-hide-lookup-table-cb %d)'%(ic.id_no)
+def hide_lookup_table_cb(ic):
+    print '(ibus-hide-lookup-table-cb %d)'%(ic.id_no)
 
-    def __page_up_lookup_table_cb(self, ic):
-        print '(ibus-log "page up lookup table")'
+def page_up_lookup_table_cb(ic):
+    print '(ibus-log "page up lookup table")'
 
-    def __page_down_lookup_table_cb(self, ic):
-        print '(ibus-log "page down lookup table")'
+def page_down_lookup_table_cb(ic):
+    print '(ibus-log "page down lookup table")'
 
-    def __cursor_up_lookup_table_cb(self, ic):
-        print '(ibus-log "cursor up lookup table")'
+def cursor_up_lookup_table_cb(ic):
+    print '(ibus-log "cursor up lookup table")'
 
-    def __cursor_down_lookup_table_cb(self, ic):
-        print '(ibus-log "cursor down lookup table")'
+def cursor_down_lookup_table_cb(ic):
+    print '(ibus-log "cursor down lookup table")'
 
-    def __enabled_cb(self, ic):
-        print '(ibus-status-changed-cb %d "%s")'%(ic.id_no, ic.get_engine().name)
+def enabled_cb(ic):
+    print '(ibus-status-changed-cb %d "%s")'%(ic.id_no, ic.get_engine().name)
 
-    def __disabled_cb(self, ic):
-        print '(ibus-status-changed-cb %d nil)'%ic.id_no
+def disabled_cb(ic):
+    print '(ibus-status-changed-cb %d nil)'%ic.id_no
 
-    def __forward_key_event_cb(self, ic, keyval, keycode, modifiers):
-        print '(ibus-forward-key-event-cb %d %d %d %s)'% \
-            (ic.id_no, keyval, modifiers & ~modifier.RELEASE_MASK,
-             lisp_boolean(modifiers & modifier.RELEASE_MASK == 0))
+def forward_key_event_cb(ic, keyval, keycode, modifiers):
+    print '(ibus-forward-key-event-cb %d %d %d %s)'% \
+        (ic.id_no, keyval, modifiers & ~modifier.RELEASE_MASK,
+         lisp_boolean(modifiers & modifier.RELEASE_MASK == 0))
 
-    def __delete_surrounding_text_cb(self, ic, offset, n_chars):
-        print '(ibus-delete-surrounding-text-cb %d %d %d)'% \
-            (ic.id_no, offset, n_chars)
+def delete_surrounding_text_cb(ic, offset, n_chars):
+    print '(ibus-delete-surrounding-text-cb %d %d %d)'% \
+        (ic.id_no, offset, n_chars)
 
 ########################################################################
 # Process methods from client
@@ -281,22 +283,9 @@ def set_engine(id_no, name):
 # Experiment
 ########################################################################
 
-def get_engine(id_no):
-    engine = imcontexts[id_no].get_engine()
-    print '(ibus-log "engine: %s")'%(engine.name if engine else 'none')
-
 def list_active_engines():
     print '(ibus-log "active engines: %s")'% \
         ' '.join('%s'%i.name for i in bus.list_active_engines())
-
-def delete_surrounding_text(id_no, offset, n_chars):
-    print '(ibus-delete-surrounding-text-cb %d %d %d)'% \
-        (id_no, offset, n_chars)
-
-def forward_key_event(id_no, keyval, keycode, modifiers):
-    print '(ibus-forward-key-event-cb %d %d %d %s)'% \
-        (id_no, keyval, modifiers & ~modifier.RELEASE_MASK,
-         lisp_boolean(modifiers & modifier.RELEASE_MASK == 0))
 
 ########################################################################
 # Main loop
