@@ -8,7 +8,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.0.2.55")
+(defconst ibus-mode-version "0.0.2.58")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -330,7 +330,7 @@ color is not controlled at all."
 isearch-mode is active. If an integer 0, this option is not active so
 that the cursor shape is not changed.
 See `cursor-type'."
-  :type '(choice (const :tag "default (0)" 0)
+  :type '(choice (const :tag "don't specify (0)" 0)
 		 (const :tag "use frame parameter" t)
 		 (const :tag "don't display" nil)
 		 (const :tag "filled box" box)
