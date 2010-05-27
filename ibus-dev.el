@@ -8,7 +8,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.0.2.59")
+(defconst ibus-mode-version "0.0.2.60")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -1745,10 +1745,14 @@ i.e. input focus is in this window."
      ;; IMContext contains preedit string
      (resume
       (setq ibus-preedit-update t))
-     ((not (and ibus-preediting-p
-		(string= text ibus-preedit-prev-text)
-		(= ibus-preedit-curpos ibus-preedit-prev-curpos)
-		(equal attrs ibus-preedit-prev-attributes)))
+     ;; Change only cursor position
+     ((and ibus-preediting-p
+	   (string= text ibus-preedit-prev-text)
+	   (equal attrs ibus-preedit-prev-attributes)
+	   (or (= ibus-preedit-curpos ibus-preedit-prev-curpos)
+	       (not (memq 'background attrs))))
+      (goto-char (+ ibus-preedit-point ibus-preedit-curpos)))
+     (t
       (if ibus-preediting-p
 	  (ibus-remove-preedit)
 	(if (eq window-system 'x)
