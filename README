@@ -4,7 +4,17 @@ ibus.el README
 0. Introduction
 ----------------------------------------------------------------------
 
-ibus.el is a IBus client for Emacs. This program allows users
+IBus is a new input method framework under active development which
+is designed to overcome the limitations of SCIM.
+
+IBus uses D-Bus protocol for communication between the ibus-daemon
+and clients (engines, panel, config tools). Since the components
+run in separate processes there is enhanced modularity and stability.
+Client processes can be loaded, started and stopped independently.
+The input method engines and clients can be written in any language
+with a dbus binding.
+
+ibus.el is a IBus client for GNU Emacs. This program allows users
 on-the-spot style input with IBus. The input statuses are individually
 kept for each buffer, and prefix-keys such as C-x and C-c can be used
 even if IBus is active. So you can input various languages fast and
@@ -19,7 +29,7 @@ This program is *not* a part of IBus.
 GNU General Public License version 3
 
 ----------------------------------------------------------------------
-2. Requirement
+2. Requirements
 ----------------------------------------------------------------------
 
 emacs22 | emacs23 | emacs-snapshot
@@ -59,12 +69,16 @@ and restart X session or execute a shell command:
 
 ii) Using ibus-anthy
 
-To using kana input method with jp106 keyboard, add the following to
-.emacs file:
+To toggle half-width eisu mode by C-j, add the following to .emacs:
+
+ (ibus-define-common-key ?\C-j t)
+
+To use kana input method with jp106 keyboard, you can enable kana
+onbiki key as follows:
 
  (setq ibus-use-kana-onbiki-key t)
 
-If you'd like to use thumb shift input method, you must specify the
+If you use thumb shift input method, you have to specify the
 simultaneous pressing time as:
 
  (setq ibus-ibus-simultaneous-pressing-time 0.1)
@@ -75,6 +89,20 @@ iii) Using ibus-chewing
 
 Please set input style to "in application window" in ibus-chewing's
 configuration dialog.
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+iv) Example of settings in .emacs
+
+ (require 'ibus)
+ ;; Turn on ibus-mode automatically after loading .emacs
+ (add-hook 'after-init-hook 'ibus-mode-on)
+ ;; Use C-SPC for Set Mark command
+ (ibus-define-common-key ?\C-\s nil)
+ ;; Use C-/ for Undo command
+ (ibus-define-common-key ?\C-/ nil)
+ ;; Change cursor color depending on IBus status
+ (setq ibus-cursor-color '("red" "blue" "limegreen"))
 
 ----------------------------------------------------------------------
 4. Web sites
