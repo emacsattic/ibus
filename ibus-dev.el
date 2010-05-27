@@ -8,7 +8,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.0.2.58")
+(defconst ibus-mode-version "0.0.2.59")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -32,12 +32,26 @@
 ;; and clients (engines, panel, config tools). Since the components
 ;; run in separate processes there is enhanced modularity and stability.
 ;; Client processes can be loaded, started and stopped independently.
-;; IBus supports Gtk2 and XIM, and has input method engines for anthy,
-;; chewing, hangul, m17n, pinyin, rawcode, and large tables. Engines
-;; and clients can be written in any language with a dbus binding.
+;; The input method engines and clients can be written in any language
+;; with a dbus binding.
 
-;; This program is IBus client for GNU Emacs. It is, however,
-;; not part of official IBus project.
+;; ibus.el is a IBus client for GNU Emacs. This program allows users
+;; on-the-spot style input with IBus. The input statuses are
+;; individually kept for each buffer, and prefix-keys such as C-x and
+;; C-c can be used even if IBus is active. So you can input various
+;; languages fast and comfortably by using it.
+
+;; This program is *not* a part of IBus.
+
+;;
+;; Requirements:
+;;
+;;  * GNU Emacs 22 or 23
+;;  * IBus (Version 1.2.0 or later)
+;;  * python-xlib
+;;
+;; Note that ibus-mode works only when Emacs is running under X session.
+;;
 
 ;;
 ;; Installation:
@@ -76,10 +90,6 @@
 ;;   (ibus-define-common-key ?\C-/ nil)
 ;;   ;; Change cursor color depending on IBus status
 ;;   (setq ibus-cursor-color '("red" "blue" "limegreen"))
-;;
-;;
-;; Note that this program requires GNU Emacs 22 or later, and
-;; works only when Emacs is running under X session.
 ;;
 
 ;;; History:
