@@ -8,7 +8,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.0.2.60")
+(defconst ibus-mode-version "0.0.2.61")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -393,8 +393,10 @@ the cursor is put to the tail of the preediting area."
   (let ((dir-list `(,(file-name-directory load-file-name)
 		    "~/bin/"
 		    "/usr/local/bin/"
+		    "/usr/local/lib/ibus-el/"
 		    "/usr/local/share/ibus-el/"
 		    "/usr/bin/"
+		    "/usr/lib/ibus-el/"
 		    "/usr/share/ibus-el/"))
 	file-name)
     (while dir-list
