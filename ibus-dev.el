@@ -8,7 +8,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.0.2.62")
+(defconst ibus-mode-version "0.0.2.63")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -2015,7 +2015,6 @@ i.e. input focus is in this window."
 
 (defun ibus-exec-callback-1 (sexplist)
   (ibus-log "buffer: %s" (current-buffer))
-  (ibus-log "socket: %s" ibus-agent-process)
   (ibus-log "display: %s" ibus-selected-display)
   (ibus-log "imcontext-id: %s" ibus-imcontext-id)
   (mapc (lambda (sexp)
