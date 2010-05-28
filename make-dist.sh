@@ -6,7 +6,7 @@ EL_DEV="ibus-dev.el"
 EL_MAIN="ibus.el"
 DBGREGEXP="^;*\t* *(ibus-log\b"
 
-FILES=("ibus-el-agent" "README" "doc")
+FILES=("ibus-el-agent" "README" "doc" "debian")
 
 PACKAGE="ibus-el"
 VERSION=$(sed -n 's/^(defconst ibus-mode-version "\(.*\)")$/\1/p' $EL_DEV)
