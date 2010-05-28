@@ -1,12 +1,12 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# ibus_el_agent.py --- helper program of IBus client for GNU Emacs
+# ibus-el-agent --- helper program of IBus client for GNU Emacs
 # Copyright (c) 2009 and onwards, S. Irie
 
 # Author: S. Irie
 # Maintainer: S. Irie
-# Version: 0.0.2.57
+# Version: 0.0.2.62
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by

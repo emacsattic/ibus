@@ -8,7 +8,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.0.2.61")
+(defconst ibus-mode-version "0.0.2.62")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -58,17 +58,17 @@
 ;;
 ;; First, save this file as ibus.el and byte-compile in
 ;; a directory that is listed in load-path, and also save
-;; ibus_el_agent.py somewhere in your system.
+;; ibus-el-agent somewhere in your system.
 ;;
 ;; Put the following in your .emacs file:
 ;;
 ;;   (require 'ibus)
 ;;   (add-hook 'after-init-hook 'ibus-mode-on)
 ;;
-;; If ibus.el and ibus_el_agent.py are saved in different
+;; If ibus.el and ibus-el-agent are saved in different
 ;; directories, add a setting to the above as follows:
 ;;
-;;   (setq ibus-agent-file-name "/PATH/TO/ibus_el_agent.py")
+;;   (setq ibus-agent-file-name "/PATH/TO/ibus-el-agent")
 ;;
 ;; To disable XIM in Emacs, put the following in ~/.Xresources:
 ;;
@@ -400,7 +400,7 @@ the cursor is put to the tail of the preediting area."
 		    "/usr/share/ibus-el/"))
 	file-name)
     (while dir-list
-      (setq file-name (concat (pop dir-list) "ibus_el_agent.py"))
+      (setq file-name (concat (pop dir-list) "ibus-el-agent"))
       (if (file-exists-p file-name)
 	  (setq dir-list nil)))
     file-name)
@@ -411,7 +411,7 @@ If `ibus-python-shell-command-name' is nil, the agent must be executable."
 
 (defcustom ibus-python-shell-command-name "python"
   "Specify shell command for executing Python interpreter, which is
-used for invoking ibus_el_agent.py. nil means execute the agent
+used for invoking ibus-el-agent. nil means execute the agent
 directly as a shell command."
   :type '(choice (const :tag "Execute agent directly (nil)" nil)
 		 (file :tag "Path of interpreter" :must-match t))

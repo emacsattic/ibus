@@ -44,7 +44,7 @@ python-xlib
 i) Common settings
 
 Save this file as ibus.el and byte-compile in a directory that is
-listed in load-path, and also save ibus_el_agent.py somewhere in
+listed in load-path, and also save ibus-el-agent somewhere in
 your system.
 
 Put the following in your .emacs file:
@@ -52,10 +52,10 @@ Put the following in your .emacs file:
  (require 'ibus)
  (add-hook 'after-init-hook 'ibus-mode-on)
 
-If ibus.el and ibus_el_agent.py are saved in different directories,
+If ibus.el and ibus-el-agent are saved in different directories,
 add a setting to the above as follows:
 
- (setq ibus-agent-file-name "/PATH/TO/ibus_el_agent.py")
+ (setq ibus-agent-file-name "/PATH/TO/ibus-el-agent")
 
 To disable XIM in Emacs, put the following in ~/.Xresources:
 
