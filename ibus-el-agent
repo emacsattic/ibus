@@ -2,11 +2,11 @@
 # -*- coding: utf-8 -*-
 
 # ibus-el-agent --- helper program of IBus client for GNU Emacs
-# Copyright (c) 2009 and onwards, S. Irie
+# Copyright (c) 2010 and onwards, S. Irie
 
 # Author: S. Irie
 # Maintainer: S. Irie
-# Version: 0.0.2.62
+# Version: 0.1.0
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
