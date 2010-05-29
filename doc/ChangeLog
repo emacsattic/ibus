@@ -1,8 +1,10 @@
 	* Version0.1.0
-	* First public release
-	* Added Multi-display support
-	* Added Japanese kana typing method support
-	* Added Japanese thumb shift typing method support
+	* Initial release
+	* Added support for multi-displays environment
+	* Added support for isearch-mode
+	* Added support for INHERIT-INPUT-METHOD
+	* Added support for Japanese kana typing method
+	* Added support for Japanese thumb shift typing method
 	* Added debian directory
 	* Fixed a lot of bugs
 2010-05-09  IRIE Shinsuke <irieshinsuke@yahoo.co.jp>
