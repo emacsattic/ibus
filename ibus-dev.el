@@ -8,7 +8,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.0.2.65")
+(defconst ibus-mode-version "0.0.2.66")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -2647,6 +2647,26 @@ i.e. input focus is in this window."
   (if ibus-imcontext-temporary-for-minibuffer
       (ibus-destroy-imcontext)))
 
+;; Advices for `anything.el'
+
+(defadvice anything-read-pattern-maybe
+  (before ibus-fix-hook-anything-read-pattern-maybe ())
+  (if ibus-mode
+      (add-hook 'post-command-hook 'ibus-check-current-buffer)))
+
+(defadvice anything-isearch-post-command
+  (before ibus-fix-hook-anything-isearch-post-command ())
+  (if (and ibus-mode
+	   (not (memq 'ibus-check-current-buffer
+		      (default-value 'post-command-hook))))
+      (ibus-check-current-buffer)))
+
+(defun ibus-activate-advices-fix-post-command-hook (enable)
+  (if enable
+      (ad-enable-regexp "^ibus-fix-hook-")
+    (ad-disable-regexp "^ibus-fix-hook-"))
+  (ad-activate-regexp "^ibus-fix-hook-"))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; INHERIT-INPUT-METHOD
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2870,6 +2890,7 @@ i.e. input focus is in this window."
 	      ibus-selected-frame (selected-frame))
 	(ibus-defadvice-disable-for-preedit)
 	(ibus-activate-advices-disable-for-preedit t)
+	(ibus-activate-advices-fix-post-command-hook t)
 	(ibus-defadvice-inherit-imcontext)
 	(ibus-activate-advices-inherit-im t)
 	(ibus-activate-advice-describe-key t)
@@ -2911,6 +2932,7 @@ i.e. input focus is in this window."
 	(delq 'ibus-mode-map-alist emulation-mode-map-alists))
   (ibus-update-kana-onbiki-key t)
   (ibus-activate-advices-disable-for-preedit nil)
+  (ibus-activate-advices-fix-post-command-hook nil)
   (ibus-activate-advices-inherit-im nil)
   (ibus-activate-advice-describe-key nil)
   (ibus-disable-isearch)
