@@ -3,6 +3,7 @@
 	* Added Multi-display support
 	* Added Japanese kana typing method support
 	* Added Japanese thumb shift typing method support
+	* Added debian directory
 	* Fixed a lot of bugs
 2010-05-09  IRIE Shinsuke <irieshinsuke@yahoo.co.jp>
 	* Version0.0.2
