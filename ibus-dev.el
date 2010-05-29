@@ -8,7 +8,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.0.2.64")
+(defconst ibus-mode-version "0.0.2.65")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -1755,6 +1755,7 @@ i.e. input focus is in this window."
 	       (not (memq 'background attrs))))
       (unless (= ibus-preedit-curpos ibus-preedit-prev-curpos)
 	(goto-char (+ ibus-preedit-point ibus-preedit-curpos))
+	(ibus-set-cursor-location)
 	(setq ibus-preedit-prev-curpos ibus-preedit-curpos)))
      (t
       (if ibus-preediting-p
