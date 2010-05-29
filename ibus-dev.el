@@ -8,7 +8,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.0.2.66")
+(defconst ibus-mode-version "0.1.0")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -93,6 +93,16 @@
 ;;
 
 ;;; History:
+;; 2010-05-29  S. Irie
+;;         * Version 0.1.0
+;;         * Initial release
+;;         * Add support for multi-displays environment
+;;         * Add support for isearch-mode
+;;         * Add support for INHERIT-INPUT-METHOD
+;;         * Add support for Japanese kana typing method
+;;         * Add support for Japanese thumb shift typing method
+;;         * Fix a lot of bugs
+;;
 ;; 2010-05-09  S. Irie
 ;;         * Version 0.0.2
 ;;         * Imported many functions from scim-bridge.el
