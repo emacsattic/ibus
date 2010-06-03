@@ -8,7 +8,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.1.0")
+(defconst ibus-mode-version "0.1.0.1")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -1005,14 +1005,6 @@ use either \\[customize] or the function `ibus-mode'."
 	    (push (car mod1) mods)))
       (event-convert-list (nconc mods (list bas))))))
 
-(defun ibus-null-command ()
-  (interactive)
-  (ibus-log "dummy event")
-  (when (interactive-p)
-    (setq this-command last-command)
-    (setq unread-command-events
-	  (delq 'ibus-dummy-event unread-command-events))))
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; buffer-undo-list
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1268,7 +1260,6 @@ use either \\[customize] or the function `ibus-mode'."
     (unless (keymapp ibus-mode-map)
       (setq ibus-mode-map (make-sparse-keymap)))
     (define-key ibus-mode-map [ibus-receive-event] 'ibus-exec-callback)
-    (define-key ibus-mode-map [ibus-dummy-event] 'ibus-null-command)
     (ibus-set-keymap-parent))
   (when (memq symbol '(nil ibus-preedit-function-key-list))
     (ibus-log "update ibus-mode-preedit-map")
@@ -1643,12 +1634,8 @@ i.e. input focus is in this window."
 	  (ibus-agent-receive)) ; Receive
 	(when ibus-frame-focus
 	  (ibus-frame-top-left-coordinates)))
-      (unless (or focus-in
-		  (memq 'ibus-receive-event unread-command-events))
-	;; Set dummy event as a trigger of `post-command-hook'
-	(setq unread-command-events
-	      (cons 'ibus-dummy-event
-		    (delq 'ibus-dummy-event unread-command-events)))))))
+      (unless focus-in
+	(ibus-check-current-buffer)))))
 
 (defun ibus-cancel-focus-update-timer ()
   (when ibus-focus-update-timer
@@ -2008,8 +1995,7 @@ i.e. input focus is in this window."
 	  (ibus-log "receive:\n%s" (buffer-string))
 	  (erase-buffer)
 	  (setq unread-command-events
-		(delq 'ibus-receive-event
-		      (delq 'ibus-dummy-event unread-command-events))))
+		(delq 'ibus-receive-event unread-command-events)))
 	(if repl
 	    (ibus-process-signals repl passive)
 	  (ibus-message "Couldn't receive data from agent."))))))
@@ -2041,9 +2027,7 @@ i.e. input focus is in this window."
     (unless (eq last-command 'ibus-handle-event)
       (setq ibus-string-insertion-failed nil))
     (setq this-command last-command
-	  unread-command-events
-	  (delq 'ibus-receive-event
-		(delq 'ibus-dummy-event unread-command-events))))
+	  unread-command-events (delq 'ibus-receive-event unread-command-events)))
   (when (buffer-live-p ibus-current-buffer)
     (with-current-buffer ibus-current-buffer
       (ibus-log "callback queue: %s" (pp-to-string ibus-callback-queue))
@@ -2093,8 +2077,7 @@ i.e. input focus is in this window."
 	      (setq ibus-callback-queue queue1))
 	    (setq unread-command-events
 		  (cons 'ibus-receive-event
-			(delq 'ibus-receive-event
-			      (delq 'ibus-dummy-event unread-command-events)))))
+			(delq 'ibus-receive-event unread-command-events))))
 	(when (buffer-live-p ibus-current-buffer)
 	  (with-current-buffer ibus-current-buffer
 	    (ibus-exec-callback-1 (nreverse rsexplist))
