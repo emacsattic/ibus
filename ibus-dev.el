@@ -8,7 +8,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.1.0.1")
+(defconst ibus-mode-version "0.1.0.2")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -1540,10 +1540,18 @@ the previous values of frame coordinates by referring the variable
 		  '(0 0)))
 	 ;; `posn-object-width-height' returns an incorrect value
 	 ;; when the header line is displayed (Emacs bug #4426).
-	 (w-h (if header-line-format
-		  (cons (frame-char-width) (frame-char-height))
+	 (w-h (cond
+	       ((null header-line-format)
 		(posn-object-width-height
-		 (posn-at-x-y (max (car x-y) 0) (cadr x-y)))))
+		 (posn-at-x-y (max (car x-y) 0) (cadr x-y))))
+	       ((and (boundp 'text-scale-mode-amount)
+		     (not (zerop text-scale-mode-amount)))
+		(let ((scale (with-no-warnings
+			       (expt text-scale-mode-step text-scale-mode-amount))))
+		  (cons (round (* (frame-char-width) scale))
+			(round (* (frame-char-height) scale)))))
+	       (t
+		(cons (frame-char-width) (frame-char-height)))))
 	 (ax (+ (car ibus-saved-frame-coordinates)
 		(car (window-inside-pixel-edges))
 		(car x-y)))
