@@ -8,7 +8,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.1.0.2")
+(defconst ibus-mode-version "0.1.0.3")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -465,6 +465,13 @@ substitute KeySym for backslash key to distinguish it from yen-mark key."
   "Specify the maximum waiting time for data reception from IBus.
 A floating point number means the number of seconds, otherwise an integer
 the milliseconds."
+  :type 'number
+  :group 'ibus-expert)
+
+(defcustom ibus-agent-buffering-time 50
+  "Specify the time waiting after starting data reception for some
+particular cases such as focusing out. A floating point number means the
+number of seconds, otherwise an integer the milliseconds."
   :type 'number
   :group 'ibus-expert)
 
@@ -1972,7 +1979,7 @@ i.e. input focus is in this window."
      (ibus-message "Couldn't send command to agent %S" err)
      nil))) ; Failed
 
-(defun ibus-agent-receive (&optional passive)
+(defun ibus-agent-receive (&optional passive wait)
   (let (repl)
     (save-current-buffer
       (when (or passive
@@ -1983,6 +1990,10 @@ i.e. input focus is in this window."
 	      (msec (and (integerp ibus-agent-timeout) ibus-agent-timeout)))
 	  (when (= (point-max) 1)
 	    (accept-process-output ibus-agent-process sec msec t))
+	  (when wait
+	    (sleep-for (or (and (floatp ibus-agent-buffering-time)
+				ibus-agent-buffering-time)
+			   (/ ibus-agent-buffering-time 1000.0))))
 	  (goto-char (point-min))
 	  (while (let ((pos (point)))
 		   (condition-case err
@@ -2109,7 +2120,7 @@ i.e. input focus is in this window."
 
 (defun ibus-commit-text-cb (id text)
   (cond
-   ((not (= id ibus-imcontext-id))
+   ((not (eq id ibus-imcontext-id))
     (ibus-message "IMContext ID (%s) is mismatched." id))
    (isearch-mode
     (isearch-process-search-string text text))
@@ -2143,19 +2154,19 @@ i.e. input focus is in this window."
     (ibus-show-preedit t))))
 
 (defun ibus-hide-preedit-text-cb (id)
-  (if (not (= id ibus-imcontext-id))
+  (if (not (eq id ibus-imcontext-id))
       (ibus-message "IMContext ID (%s) is mismatched." id)
     (setq ibus-preedit-shown nil
 	  ibus-preedit-update t)))
 
 (defun ibus-show-preedit-text-cb (id)
-  (if (not (= id ibus-imcontext-id))
+  (if (not (eq id ibus-imcontext-id))
       (ibus-message "IMContext ID (%s) is mismatched." id)
     (setq ibus-preedit-shown t
 	  ibus-preedit-update t)))
 
 (defun ibus-update-preedit-text-cb (id text cursor-pos visible &rest attributes)
-  (if (not (= id ibus-imcontext-id))
+  (if (not (eq id ibus-imcontext-id))
       (ibus-message "IMContext ID (%s) is mismatched." id)
     (setq ibus-preedit-text text
 	  ibus-preedit-curpos cursor-pos
@@ -2164,19 +2175,19 @@ i.e. input focus is in this window."
 	  ibus-preedit-update t)))
 
 (defun ibus-hide-auxiliary-text-cb (id)
-  (if (not (= id ibus-imcontext-id))
+  (if (not (eq id ibus-imcontext-id))
       (ibus-message "IMContext ID (%s) is mismatched." id)
     (setq ibus-auxiliary-shown nil
 	  ibus-preedit-update t)))
 
 (defun ibus-show-auxiliary-text-cb (id)
-  (if (not (= id ibus-imcontext-id))
+  (if (not (eq id ibus-imcontext-id))
       (ibus-message "IMContext ID (%s) is mismatched." id)
     (setq ibus-auxiliary-shown t
 	  ibus-preedit-update t)))
 
 (defun ibus-update-auxiliary-text-cb (id text visible)
-  (if (not (= id ibus-imcontext-id))
+  (if (not (eq id ibus-imcontext-id))
       (ibus-message "IMContext ID (%s) is mismatched." id)
     (setq ibus-auxiliary-text text
 	  ibus-auxiliary-shown visible
@@ -2200,7 +2211,7 @@ i.e. input focus is in this window."
 
 (defun ibus-delete-surrounding-text-cb (id offset length)
   (cond
-   ((not (= id ibus-imcontext-id))
+   ((not (eq id ibus-imcontext-id))
     (ibus-message "IMContext ID (%s) is mismatched." id))
    (buffer-read-only
     (ibus-message "Buffer is read-only: %S" (current-buffer)))
@@ -2229,7 +2240,7 @@ i.e. input focus is in this window."
     (if event
 	(if pressed
 	    (setq unread-command-events (cons event unread-command-events)))
-      (if (not (= id ibus-imcontext-id))
+      (if (not (eq id ibus-imcontext-id))
 	  (ibus-message "IMContext ID (%s) is mismatched." id)
 	(ibus-agent-send-key-event keyval modmask nil pressed)))))
 
@@ -2445,7 +2456,10 @@ i.e. input focus is in this window."
   (when (and (numberp ibus-imcontext-id)
 	     ibus-frame-focus)
     (ibus-change-focus nil)
-    (ibus-agent-receive))
+    (ibus-agent-receive nil t)
+    (if (buffer-live-p ibus-preediting-p)
+	(with-current-buffer ibus-preediting-p
+	  (ibus-cleanup-preedit))))
   (let ((group (assq ibus-buffer-group ibus-buffer-group-alist)))
     (when (and group
 	       (null (setcar (nthcdr 3 group)
@@ -2475,8 +2489,9 @@ i.e. input focus is in this window."
   (when (and (processp ibus-agent-process)
 	     (numberp ibus-imcontext-id))
     (if engine-name
-	(ibus-agent-send-receive "set_engine(%d, %S)" ibus-imcontext-id engine-name)
-    (ibus-agent-send-receive "enable(%d)" ibus-imcontext-id))))
+	(ibus-agent-send "set_engine(%d, %S)" ibus-imcontext-id engine-name)
+      (ibus-agent-send "enable(%d)" ibus-imcontext-id))
+    (ibus-agent-receive nil t)))
 
 (defun ibus-disable ()
   (interactive)
@@ -2485,12 +2500,13 @@ i.e. input focus is in this window."
     (ibus-check-current-buffer))
   (when (and (processp ibus-agent-process)
 	     (numberp ibus-imcontext-id))
-    (ibus-agent-send-receive "disable(%d)" ibus-imcontext-id))
+    (ibus-agent-send "disable(%d)" ibus-imcontext-id)
+    (ibus-agent-receive nil t))
   (if ibus-imcontext-status
       (ibus-status-changed-cb ibus-imcontext-id nil)))
 
 (defun ibus-status-changed-cb (id status)
-  (if (not (= id ibus-imcontext-id))
+  (if (not (eq id ibus-imcontext-id))
       (ibus-message "IMContext ID (%s) is mismatched." id)
     (unless (string= ibus-preedit-prev-text "")
       (ibus-commit-text-cb id ibus-preedit-prev-text)
@@ -2559,7 +2575,7 @@ i.e. input focus is in this window."
 	      (when (numberp ibus-imcontext-id)
 		(when ibus-frame-focus
 		  (ibus-change-focus nil) ; Send
-		  (ibus-agent-receive)) ; Receive
+		  (ibus-agent-receive nil t)) ; Receive
 		(if ibus-preediting-p
 		    ;; Cleenup preedit if focus change become timeout
 		    (ibus-abort-preedit)))))
