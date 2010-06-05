@@ -6,7 +6,7 @@
 
 # Author: S. Irie
 # Maintainer: S. Irie
-# Version: 0.1.0
+# Version: 0.1.0.4
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -71,7 +71,7 @@ display = Xlib.display.Display()
 
 try:
     bus = ibus.Bus()
-except TypeError:
+except:
     import os
     import time
     if os.spawnlp(os.P_WAIT, "ibus-daemon", "ibus-daemon", "-d") == 0:
@@ -80,7 +80,7 @@ except TypeError:
             try:
                 bus = ibus.Bus()
                 break
-            except TypeError:
+            except:
                 pass
         else:
             print '(error "Failed to connect with ibus-daemon")'
