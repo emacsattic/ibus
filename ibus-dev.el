@@ -8,7 +8,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.1.0.3")
+(defconst ibus-mode-version "0.1.0.6")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -1405,12 +1405,12 @@ restart ibus-mode so that this settings may become effective."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun ibus-get-x-display ()
-  ;; Don't use (frame-parameter nil 'display) because
-  ;; this expression returns nil if frame is on text-only terminal.
-  (let ((env (getenv "DISPLAY")))
-    (and env (let* ((display (substring env (string-match ":[0-9]+" env)))
-		    (screen (and (not (string-match "\\.[0-9]+$" display)) ".0")))
-	       (concat display screen)))))
+  (let ((env (or (frame-parameter nil 'display)
+		 (getenv "DISPLAY"))))
+    (and env
+	 (let* ((display (substring env (string-match ":[0-9]+" env)))
+		(screen (and (not (string-match "\\.[0-9]+$" display)) ".0")))
+	   (concat display screen)))))
 
 (defun ibus-mode-line-string ()
   (let ((status (cdr (assoc ibus-selected-display
@@ -2551,8 +2551,9 @@ i.e. input focus is in this window."
       (let ((buffer (current-buffer))
 	    (visited-p ibus-buffer-group)
 	    (non-x-p (not (eq window-system 'x)))
-	    (display-unchanged-p (equal (ibus-get-x-display)
-					ibus-selected-display)))
+	    (display-unchanged-p (or (eq (selected-frame) ibus-selected-frame)
+				     (equal (ibus-get-x-display)
+					    ibus-selected-display))))
 	;; Switch IMContext between global and local
 	(unless (or non-x-p
 		    (not visited-p)
