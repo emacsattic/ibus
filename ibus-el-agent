@@ -6,7 +6,7 @@
 
 # Author: S. Irie
 # Maintainer: S. Irie
-# Version: 0.1.0.5
+# Version: 0.1.0.7
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -244,16 +244,24 @@ def destroy_imcontext(id_no):
     else:
         imcontexts[id_no] = None
 
-def process_key_event(id_no, keyval, modmask, backslash, pressed):
+def process_key_event(id_no, keyval, modmask, backslash, pressed = None):
     if backslash:
-        keycode = (display.keysym_to_keycode(backslash), 0)
+        keycode = display.keysym_to_keycode(backslash) - 8
     else:
-        keycode = display.keysym_to_keycodes(keyval)[0]
-        if keyval < 0x100 and keycode[1] & 1 != 0:
+        keycode_tuple = display.keysym_to_keycodes(keyval)[0]
+        if keyval < 0x100 and keycode_tuple[1] & 1 != 0:
             modmask |= modifier.SHIFT_MASK
-    if not pressed:
-        modmask |= modifier.RELEASE_MASK
-    handled = imcontexts[id_no].process_key_event(keyval, keycode[0] - 8, modmask)
+        keycode = keycode_tuple[0] - 8
+    if pressed != None:
+        if not pressed:
+            modmask |= modifier.RELEASE_MASK
+        handled = imcontexts[id_no].process_key_event(keyval, keycode, modmask)
+    else:
+        ic = imcontexts[id_no]
+        handled_p = ic.process_key_event(keyval, keycode, modmask)
+        handled_r = ic.process_key_event(keyval, keycode,
+                                         modmask | modifier.RELEASE_MASK)
+        handled = handled_p or handled_r
     print '(ibus-process-key-event-cb %d %s)'%(id_no, lisp_boolean(handled))
 
 def set_cursor_location(id_no, x, y, w, h):

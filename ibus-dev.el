@@ -8,7 +8,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.1.0.6")
+(defconst ibus-mode-version "0.1.0.7")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -2252,7 +2252,9 @@ i.e. input focus is in this window."
   (when (ibus-agent-send "process_key_event(%d, %d, 0x%x, %s, %s)"
 			 ibus-imcontext-id keyval modmask
 			 (or backslash "None")
-			 (if pressed "True" "False"))
+			 (nth (or (and (numberp pressed) pressed)
+				  (if pressed 1 0))
+			      '("False" "True" "None")))
     (let ((time-limit (+ (float-time)
 			 (or (and (floatp ibus-agent-timeout)
 				  ibus-agent-timeout)
@@ -2359,7 +2361,8 @@ i.e. input focus is in this window."
 	(let ((ibus-simultaneous-pressing-time nil))
 	  (undo-boundary)
 	  (setq this-command 'ibus-handle-event)
-	  (ibus-process-key-event event))))))
+	  (ibus-process-key-event event))))
+    (ibus-agent-send-key-event keyval modmask backslash nil)))
 
 (defun ibus-process-key-event (event)
   (let* ((decoded (ibus-decode-event event))
@@ -2389,9 +2392,7 @@ i.e. input focus is in this window."
 		     ibus-imcontext-status)
 		;; Thumb shift typing method
 		(ibus-wait-following-key-event event keyval modmask backslash)
-	      (ibus-agent-send-key-event keyval modmask backslash t))
-	    (unless ibus-string-insertion-failed
-	      (ibus-agent-send-key-event keyval modmask backslash nil)))
+	      (ibus-agent-send-key-event keyval modmask backslash 2)))
 	;; IMContext is not registered or key event is not recognized
 	(ibus-process-key-event-cb ibus-imcontext-id nil))))
   ;; Repair post-command-hook
