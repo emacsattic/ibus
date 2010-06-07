@@ -8,7 +8,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.1.0.7")
+(defconst ibus-mode-version "0.1.0.8")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -1648,7 +1648,10 @@ i.e. input focus is in this window."
 		    ibus-preediting-p)
 	  (ibus-agent-receive)) ; Receive
 	(when ibus-frame-focus
-	  (ibus-frame-top-left-coordinates)))
+	  (ibus-frame-top-left-coordinates)
+	  (when ibus-preediting-p
+	    (ibus-remove-preedit)
+	    (ibus-show-preedit))))
       (unless focus-in
 	(ibus-check-current-buffer)))))
 
@@ -2509,9 +2512,8 @@ i.e. input focus is in this window."
 (defun ibus-status-changed-cb (id status)
   (if (not (eq id ibus-imcontext-id))
       (ibus-message "IMContext ID (%s) is mismatched." id)
-    (unless (string= ibus-preedit-prev-text "")
-      (ibus-commit-text-cb id ibus-preedit-prev-text)
-      (ibus-cleanup-preedit))
+    (if ibus-preediting-p
+	(ibus-cleanup-preedit))
     (setq ibus-imcontext-status status)
     (setcdr (assoc ibus-selected-display
 		   (nth 2 (assq ibus-buffer-group ibus-buffer-group-alist)))
@@ -2580,8 +2582,8 @@ i.e. input focus is in this window."
 		  (ibus-agent-receive nil t)) ; Receive
 		(if ibus-preediting-p
 		    ;; Cleenup preedit if focus change become timeout
-		    (ibus-abort-preedit)))))
-	;; Setup currently selected buffer
+		    (ibus-cleanup-preedit)))))
+	  ;; Setup currently selected buffer
 	  (unless display-unchanged-p
 	    (condition-case err
 		(ibus-change-x-display)
