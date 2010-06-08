@@ -8,7 +8,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.1.0.10")
+(defconst ibus-mode-version "0.1.0.11")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -1526,7 +1526,7 @@ Users can also get the frame coordinates by referring the variable
 (defun ibus-compute-pixel-position
   (&optional pos window frame-coordinates)
   "Return the absolute pixel coordinates of POS in WINDOW as a list like
-\(X Y W H), here W and H are the pixel width and height of object at POS.
+\(X Y H), here H is the pixel height of object at POS.
 
 Omitting POS and WINDOW means use current position and selected window,
 respectively.
@@ -1555,21 +1555,20 @@ the previous values of frame coordinates by referring the variable
 		  (cadr x-y)))
 	   ;; `posn-object-width-height' returns an incorrect value
 	   ;; when the header line is displayed (Emacs bug #4426).
-	   (w-h (with-current-buffer (window-buffer window)
-		  (cond
-		   ((null header-line-format)
-		    (posn-object-width-height
-		     (posn-at-x-y (max (car x-y) 0) (cadr x-y) window)))
-		   ((and (boundp 'text-scale-mode-amount)
-			 (not (zerop text-scale-mode-amount)))
-		    (let ((scale (with-no-warnings
+	   (height (with-current-buffer (window-buffer window)
+		     (cond
+		      ((null header-line-format)
+		       (cdr (posn-object-width-height
+			     (posn-at-x-y (max (car x-y) 0) (cadr x-y) window))))
+		      ((and (boundp 'text-scale-mode-amount)
+			    (not (zerop text-scale-mode-amount)))
+		       (round (* (frame-char-height frame)
+				 (with-no-warnings
 				   (expt text-scale-mode-step
-					 text-scale-mode-amount))))
-		      (cons (round (* (frame-char-width frame) scale))
-			    (round (* (frame-char-height frame) scale)))))
-		   (t
-		    (cons (frame-char-width frame) (frame-char-height frame)))))))
-      (list ax ay (car w-h) (cdr w-h)))))
+					 text-scale-mode-amount)))))
+		      (t
+		       (frame-char-height frame))))))
+      (list ax ay height))))
 
 ;;; TODO: FIXME: Does anyone know how to get the actual character height
 ;;;              even if the header line is displayed?
@@ -1578,10 +1577,10 @@ the previous values of frame coordinates by referring the variable
   (let* ((rect (ibus-compute-pixel-position
 		(+ ibus-preedit-point ibus-preedit-curpos) nil
 		ibus-saved-frame-coordinates)))
-    (ibus-log "cursor position (x y w h): %s" rect)
+    (ibus-log "cursor position (x y h): %s" rect)
     ;; Finite value of width seems to locate candidate window in incorrect position
     (ibus-agent-send "set_cursor_location(%d, %d, %d, 0, %d)" ibus-imcontext-id
-		     (car rect) (cadr rect) (nth 3 rect)))) ; Send only
+		     (car rect) (cadr rect) (nth 2 rect)))) ; Send only
 
 ;; Frame input focuses
 
