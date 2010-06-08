@@ -8,7 +8,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.1.0.11")
+(defconst ibus-mode-version "0.1.0.12")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -1523,8 +1523,7 @@ Users can also get the frame coordinates by referring the variable
 					    (search-forward "Y: ")
 					    (line-end-position)))))))))
 
-(defun ibus-compute-pixel-position
-  (&optional pos window frame-coordinates)
+(defun ibus-compute-pixel-position (&optional pos window frame-coordinates)
   "Return the absolute pixel coordinates of POS in WINDOW as a list like
 \(X Y H), here H is the pixel height of object at POS.
 
