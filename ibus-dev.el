@@ -8,7 +8,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.1.0.9")
+(defconst ibus-mode-version "0.1.0.10")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -1540,32 +1540,36 @@ This option makes the calculations slightly faster, but can be used only
 when it's clear that frame is in the specified position. Users can get
 the previous values of frame coordinates by referring the variable
 `ibus-saved-frame-coordinates'."
-  (unless frame-coordinates
-    (ibus-frame-top-left-coordinates
-     (window-frame (or window (selected-window)))))
-  (let* ((x-y (or (pos-visible-in-window-p (or pos (window-point window)) window t)
-		  '(0 0)))
-	 ;; `posn-object-width-height' returns an incorrect value
-	 ;; when the header line is displayed (Emacs bug #4426).
-	 (w-h (cond
-	       ((null header-line-format)
-		(posn-object-width-height
-		 (posn-at-x-y (max (car x-y) 0) (cadr x-y))))
-	       ((and (boundp 'text-scale-mode-amount)
-		     (not (zerop text-scale-mode-amount)))
-		(let ((scale (with-no-warnings
-			       (expt text-scale-mode-step text-scale-mode-amount))))
-		  (cons (round (* (frame-char-width) scale))
-			(round (* (frame-char-height) scale)))))
-	       (t
-		(cons (frame-char-width) (frame-char-height)))))
-	 (ax (+ (car ibus-saved-frame-coordinates)
-		(car (window-inside-pixel-edges))
-		(car x-y)))
-	 (ay (+ (cdr ibus-saved-frame-coordinates)
-		(cadr (window-pixel-edges))
-		(cadr x-y))))
-    (list ax ay (car w-h) (cdr w-h))))
+  (unless window
+    (setq window (selected-window)))
+  (let ((frame (window-frame window)))
+    (unless frame-coordinates
+      (ibus-frame-top-left-coordinates frame))
+    (let* ((x-y (or (pos-visible-in-window-p (or pos (window-point window)) window t)
+		    '(0 0)))
+	   (ax (+ (car ibus-saved-frame-coordinates)
+		  (car (window-inside-pixel-edges window))
+		  (car x-y)))
+	   (ay (+ (cdr ibus-saved-frame-coordinates)
+		  (cadr (window-pixel-edges window))
+		  (cadr x-y)))
+	   ;; `posn-object-width-height' returns an incorrect value
+	   ;; when the header line is displayed (Emacs bug #4426).
+	   (w-h (with-current-buffer (window-buffer window)
+		  (cond
+		   ((null header-line-format)
+		    (posn-object-width-height
+		     (posn-at-x-y (max (car x-y) 0) (cadr x-y) window)))
+		   ((and (boundp 'text-scale-mode-amount)
+			 (not (zerop text-scale-mode-amount)))
+		    (let ((scale (with-no-warnings
+				   (expt text-scale-mode-step
+					 text-scale-mode-amount))))
+		      (cons (round (* (frame-char-width frame) scale))
+			    (round (* (frame-char-height frame) scale)))))
+		   (t
+		    (cons (frame-char-width frame) (frame-char-height frame)))))))
+      (list ax ay (car w-h) (cdr w-h)))))
 
 ;;; TODO: FIXME: Does anyone know how to get the actual character height
 ;;;              even if the header line is displayed?
