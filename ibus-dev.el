@@ -8,7 +8,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.1.0.12")
+(defconst ibus-mode-version "0.1.0.13")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -1507,6 +1507,7 @@ If FRAME is omitted, use selected-frame.
 Users can also get the frame coordinates by referring the variable
 `ibus-saved-frame-coordinates' just after calling this function."
   ;; Note: This function was imported from pos-tip.el ver. 0.0.3
+  (ibus-log "get frame coordinates")
   (with-current-buffer (get-buffer-create " *xwininfo*")
     (let ((case-fold-search nil))
       (buffer-disable-undo)
@@ -2657,8 +2658,11 @@ i.e. input focus is in this window."
 	  (kill-local-variable 'ibus-cursor-type-saved))))
       ;; Check selected frame
       (unless (eq (selected-frame) ibus-selected-frame)
-	(if (eq window-system 'x)
-	    (ibus-frame-top-left-coordinates))
+	(when (and ibus-preediting-p
+		   (eq window-system 'x))
+	  (ibus-frame-top-left-coordinates)
+	  (ibus-remove-preedit)
+	  (ibus-show-preedit))
 	(setq ibus-selected-frame (selected-frame))
 	(ibus-update-cursor-color)))
     (ibus-start-focus-observation)))
