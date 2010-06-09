@@ -8,7 +8,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.1.0.14")
+(defconst ibus-mode-version "0.1.0.15")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -869,6 +869,7 @@ use either \\[customize] or the function `ibus-mode'."
 (defvar ibus-string-insertion-failed nil)
 (defvar ibus-last-rejected-event nil)
 (defvar ibus-last-command nil)
+(defvar ibus-cursor-prev-location nil)
 
 ;; IMContexts
 (defvar ibus-buffer-group nil)
@@ -1516,7 +1517,8 @@ Users can also get the frame coordinates by referring the variable
 		    (concat "xwininfo -id " (frame-parameter frame 'window-id)))
       (goto-char (point-min))
       (search-forward "\n  Absolute")
-      (setq ibus-saved-frame-coordinates
+      (setq ibus-cursor-prev-location nil
+	    ibus-saved-frame-coordinates
 	    (cons (progn (string-to-number (buffer-substring-no-properties
 					    (search-forward "X: ")
 					    (line-end-position))))
@@ -1578,9 +1580,11 @@ the previous values of frame coordinates by referring the variable
 		(+ ibus-preedit-point ibus-preedit-curpos) nil
 		ibus-saved-frame-coordinates)))
     (ibus-log "cursor position (x y h): %s" rect)
-    ;; Finite value of width seems to locate candidate window in incorrect position
-    (ibus-agent-send "set_cursor_location(%d, %d, %d, 0, %d)" ibus-imcontext-id
-		     (car rect) (cadr rect) (nth 2 rect)))) ; Send only
+    (unless (equal rect ibus-cursor-prev-location)
+      (setq ibus-cursor-prev-location rect)
+      ;; Finite value of width seems to locate candidate window in incorrect position
+      (ibus-agent-send "set_cursor_location(%d, %d, %d, 0, %d)" ibus-imcontext-id
+		       (car rect) (cadr rect) (nth 2 rect))))) ; Send only
 
 ;; Frame input focuses
 
