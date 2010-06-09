@@ -8,7 +8,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.1.0.13")
+(defconst ibus-mode-version "0.1.0.14")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -2489,6 +2489,8 @@ i.e. input focus is in this window."
       (setq ibus-current-buffer nil)))
 
 (defun ibus-enable (&optional engine-name)
+  "Enable IBus input method.
+ENGINE-NAME, if given as a string, specify input method engine."
   (interactive)
   (when (and (interactive-p)
 	     (null ibus-current-buffer))
@@ -2501,6 +2503,7 @@ i.e. input focus is in this window."
     (ibus-agent-receive nil t)))
 
 (defun ibus-disable ()
+  "Disable IBus input method."
   (interactive)
   (when (and (interactive-p)
 	     (null ibus-current-buffer))
@@ -2528,6 +2531,7 @@ i.e. input focus is in this window."
       (ibus-update-kana-onbiki-key))))
 
 (defun ibus-toggle ()
+  "Toggle IBus' input status."
   (interactive)
   (when (and (interactive-p)
 	     (null ibus-current-buffer))
@@ -2889,6 +2893,7 @@ i.e. input focus is in this window."
 	ibus-last-command nil))
 
 (defun ibus-mode-on ()
+  "Turn ibus-mode on."
   (interactive)
   (if (not (or (eq window-system 'x) ; X frame
 	       (getenv "DISPLAY")))  ; non-X frame under X session
@@ -2977,6 +2982,7 @@ i.e. input focus is in this window."
   ibus-mode)
 
 (defun ibus-mode-off ()
+  "Turn ibus-mode off."
   (interactive)
   (when (and (numberp ibus-imcontext-id)
 	     ibus-frame-focus)
