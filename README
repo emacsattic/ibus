@@ -67,7 +67,7 @@ and restart X session or execute a shell command:
 
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-ii) Using ibus-anthy
+ii-a) Using ibus-anthy
 
 To toggle half-width eisu mode by C-j, add the following to .emacs:
 
@@ -85,14 +85,32 @@ simultaneous pressing time as:
 
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-iii) Using ibus-chewing
+ii-b) Using ibus-skk
+
+To enter kana mode by C-j, add the following to .emacs:
+
+ (setq ibus-use-kana-onbiki-key t)
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+ii-c) Using ibus-mozc
+
+By default, the suggestion window is shown under the start point of
+preedit text. To put the window at the cursor position as in the other
+applications, add the following to .emacs:
+
+ (setq ibus-prediction-window-position t)
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+ii-d) Using ibus-chewing
 
 Please set input style to "in application window" in ibus-chewing's
 configuration dialog.
 
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-iv) Example of settings in .emacs
+iii) Example of settings in .emacs
 
  (require 'ibus)
  ;; Turn on ibus-mode automatically after loading .emacs
