@@ -6,7 +6,7 @@
 
 # Author: S. Irie
 # Maintainer: S. Irie
-# Version: 0.1.0.7
+# Version: 0.1.0.17
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -114,6 +114,7 @@ class IBusELInputContext(ibus.InputContext):
         super(IBusELInputContext, self).__init__(bus, self.__path, True)
 
         self.id_no = 0
+        self.preediting = False
         self.lookup_table = None
 
         self.connect('commit-text', commit_text_cb)
@@ -150,13 +151,16 @@ def commit_text_cb(ic, text):
         (ic.id_no, escape_string(text.text).encode("utf-8"))
 
 def update_preedit_text_cb(ic, text, cursor_pos, visible):
-    attrs = ['%s %d %d %d'%
-             (["nil", "'underline", "'foreground", "'background"][attr.type],
-              attr.value & 0xffffff, attr.start_index, attr.end_index)
-             for attr in text.attributes]
-    print '(ibus-update-preedit-text-cb %d "%s" %d %s %s)'% \
-        (ic.id_no, escape_string(text.text).encode("utf-8"),
-         cursor_pos, lisp_boolean(visible), ' '.join(attrs))
+    preediting = len(text.text) > 0
+    if preediting or ic.preediting:
+        attrs = ['%s %d %d %d'%
+                 (["nil", "'underline", "'foreground", "'background"][attr.type],
+                  attr.value & 0xffffff, attr.start_index, attr.end_index)
+                 for attr in text.attributes]
+        print '(ibus-update-preedit-text-cb %d "%s" %d %s %s)'% \
+            (ic.id_no, escape_string(text.text).encode("utf-8"),
+             cursor_pos, lisp_boolean(visible), ' '.join(attrs))
+    ic.preediting = preediting
 
 def show_preedit_text_cb(ic):
     print '(ibus-show-preedit-text-cb %d)'%(ic.id_no)
