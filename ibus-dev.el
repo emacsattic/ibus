@@ -8,7 +8,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.1.0.18")
+(defconst ibus-mode-version "0.1.0.19")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -1591,7 +1591,8 @@ the previous values of frame coordinates by referring the variable
 	       (null ibus-prediction-window-position))
     (let* ((rect (ibus-compute-pixel-position
 		  (if (and prediction
-			   (eq ibus-prediction-window-position 0))
+			   (eq ibus-prediction-window-position 0)
+			   (not (minibufferp)))
 		      ibus-preedit-point
 		    (+ ibus-preedit-point ibus-preedit-curpos))
 		  nil ibus-saved-frame-coordinates)))
