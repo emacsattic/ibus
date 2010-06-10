@@ -8,7 +8,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.1.0.16")
+(defconst ibus-mode-version "0.1.0.18")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -392,6 +392,17 @@ See `cursor-type'."
 is put on the selected segment if this option is non-nil. Otherwise,
 the cursor is put to the tail of the preediting area."
   :type 'boolean
+  :group 'ibus-appearance)
+
+(defcustom ibus-prediction-window-position
+  0
+  "Specify position showing a prediction window of some input methods
+such as ibus-mozc. A value of t means show it under cursor. An integer
+0 means under the start point of preediting text. If you won't use
+prediction window, you can set nil not to send the coordinates to IBus."
+  :type '(choice (const :tag "Don't use prediction" nil)
+		 (const :tag "Head of preediting area" 0)
+		 (const :tag "Below cursor" t))
   :group 'ibus-appearance)
 
 ;; Advanced settings
@@ -1575,16 +1586,21 @@ the previous values of frame coordinates by referring the variable
 ;;; TODO: FIXME: Does anyone know how to get the actual character height
 ;;;              even if the header line is displayed?
 
-(defun ibus-set-cursor-location ()
-  (let* ((rect (ibus-compute-pixel-position
-		(+ ibus-preedit-point ibus-preedit-curpos) nil
-		ibus-saved-frame-coordinates)))
-    (ibus-log "cursor position (x y h): %s" rect)
-    (unless (equal rect ibus-cursor-prev-location)
-      (setq ibus-cursor-prev-location rect)
-      ;; Finite value of width seems to locate candidate window in incorrect position
-      (ibus-agent-send "set_cursor_location(%d, %d, %d, 0, %d)" ibus-imcontext-id
-		       (car rect) (cadr rect) (nth 2 rect))))) ; Send only
+(defun ibus-set-cursor-location (&optional prediction)
+  (unless (and prediction
+	       (null ibus-prediction-window-position))
+    (let* ((rect (ibus-compute-pixel-position
+		  (if (and prediction
+			   (eq ibus-prediction-window-position 0))
+		      ibus-preedit-point
+		    (+ ibus-preedit-point ibus-preedit-curpos))
+		  nil ibus-saved-frame-coordinates)))
+      (ibus-log "cursor position (x y h): %s" rect)
+      (unless (equal rect ibus-cursor-prev-location)
+	(setq ibus-cursor-prev-location rect)
+	;; Finite width seems to locate candidate window in incorrect position
+	(ibus-agent-send "set_cursor_location(%d, %d, %d, 0, %d)" ibus-imcontext-id
+			 (car rect) (cadr rect) (nth 2 rect)))))) ; Send only
 
 ;; Frame input focuses
 
@@ -1777,7 +1793,7 @@ i.e. input focus is in this window."
 	       (not (memq 'background attrs))))
       (unless (= ibus-preedit-curpos ibus-preedit-prev-curpos)
 	(goto-char (+ ibus-preedit-point ibus-preedit-curpos))
-	(ibus-set-cursor-location)
+	(ibus-set-cursor-location t)
 	(setq ibus-preedit-prev-curpos ibus-preedit-curpos)))
      (t
       (if ibus-preediting-p
@@ -1858,10 +1874,11 @@ i.e. input focus is in this window."
 			(or (and (local-variable-p 'cursor-type) cursor-type)
 			    1))) ; 1 means that global value has been used
 		(if ibus-put-cursor-on-candidate
-		    (goto-char (+ ibus-preedit-point ibus-preedit-curpos))))
+		    (goto-char (+ ibus-preedit-point ibus-preedit-curpos)))
+		(ibus-set-cursor-location))
 	    ;; When the string is preedited or prediction window is shown
-	    (goto-char (+ ibus-preedit-point ibus-preedit-curpos)))
-	  (ibus-set-cursor-location))
+	    (goto-char (+ ibus-preedit-point ibus-preedit-curpos))
+	    (ibus-set-cursor-location t)))
 	(run-hooks 'ibus-preedit-show-hook))
       ))))
 
