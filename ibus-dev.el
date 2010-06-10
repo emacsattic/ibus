@@ -8,7 +8,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.1.0.15")
+(defconst ibus-mode-version "0.1.0.16")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -2274,6 +2274,7 @@ i.e. input focus is in this window."
 		  (< (float-time) time-limit))
 	(ibus-agent-receive))
       (when (and (car ibus-agent-key-event-handled)
+		 (not ibus-surrounding-text-modified)
 		 (not ibus-preediting-p))
 	;; Send cursor location for displaying candidate window without preedit
 	(let ((ibus-preedit-point (point)))
