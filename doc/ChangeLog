@@ -1,3 +1,20 @@
+	* Version0.1.1
+	* Added option `ibus-prediction-window-position'
+	* Added option `ibus-agent-buffering-time'
+	* Changed so that key release events don't have to be sent to the agent
+	* Changed not to send cursor location if it's the same as previous one
+	* Changed ibus-el-agent not to send unnecessary 'commit-text' signals
+	to Emacs when preedit text is empty
+	* Changed not to use unnecessary event `ibus-dummy-event'
+	* Modified not to send cursor location to agent just after text is committed
+	* Modified to work correctly when setting "Hold" to "Behavior on Focus Out"
+	in ibus-anthy's preferences
+	* Modified to redraw preedit text when switching frames showing same buffer
+	* Fixed bug: Candidate window is shown at incorrect position when using
+	text-scale-mode with header line shown
+	* Fixed bug: post-command-hook becomes extremely slow when using many frames
+	* Fixed bug: ibus-mode is unexpectedly exited when used with IBus 1.3
+	* Fixed bug: Agent might fail to launch IBus daemon
 2010-05-29  IRIE Shinsuke <irieshinsuke@yahoo.co.jp>
 	* Version0.1.0
 	* Initial release
