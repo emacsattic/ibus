@@ -1,3 +1,9 @@
+ibus-el (0.1.1) lucid; urgency=low
+
+  * New release
+
+ -- IRIE Shinsuke <irieshinsuke@yahoo.co.jp>  Sat, 12 Jun 2010 02:00:29 +0900
+
 ibus-el (0.1.0) lucid; urgency=low
 
   * Initial release

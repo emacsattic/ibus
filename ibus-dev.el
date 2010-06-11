@@ -8,7 +8,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.1.0.20")
+(defconst ibus-mode-version "0.1.1")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -93,6 +93,13 @@
 ;;
 
 ;;; History:
+;; 2010-06-11  S. Irie
+;;         * Version 0.1.1
+;;         * Improved performance and stability
+;;         * Add option `ibus-prediction-window-position'
+;;         * Add option `ibus-agent-buffering-time'
+;;         * Bug fixes
+;;
 ;; 2010-05-29  S. Irie
 ;;         * Version 0.1.0
 ;;         * Initial release

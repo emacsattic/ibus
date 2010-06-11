@@ -1,3 +1,4 @@
+2010-06-11  IRIE Shinsuke <irieshinsuke@yahoo.co.jp>
 	* Version0.1.1
 	* Added option `ibus-prediction-window-position'
 	* Added option `ibus-agent-buffering-time'

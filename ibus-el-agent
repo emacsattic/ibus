@@ -6,7 +6,7 @@
 
 # Author: S. Irie
 # Maintainer: S. Irie
-# Version: 0.1.0.21
+# Version: 0.1.1
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -39,6 +39,11 @@
 
 # ChangeLog:
 
+# 2010-06-11  S. Irie
+#         * Version 0.1.1
+#         * Changed to reduce inter-process communication
+#         * Bug fix
+#
 # 2010-05-29  S. Irie
 #         * Version 0.1.0
 #         * Initial release
