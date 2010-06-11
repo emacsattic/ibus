@@ -8,7 +8,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.1.0.19")
+(defconst ibus-mode-version "0.1.0.20")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -113,6 +113,10 @@
 
 ;; ToDo:
 
+;;  * Don't use xwininfo
+;;  * Don't use xmodmap
+;;  * Xming rootless mode support (Don't use _NET_ACTIVE_WINDOW)
+;;  * Text-only frame support
 ;;  * leim support
 ;;  * performance issue
 
