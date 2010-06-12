@@ -64,13 +64,40 @@ import re
 import ibus
 from ibus import modifier
 
+########################################################################
+# Setup Xlib
+########################################################################
+
 try:
     import Xlib.display
 except ImportError:
     print "python-xlib library is required"
     exit(1)
 
+class Frame(object):
+
+    def __init__(self, display):
+        self.display = display
+        self.window_id = None
+        self.window = None
+        self.root_window = None
+        self.left = 0
+        self.top = 0
+
+    def update_coordinates(self):
+        if self.window:
+            absolute = self.root_window.translate_coords(self.window, 0, 0)
+            self.left = absolute.x
+            self.top = absolute.y
+
+    def set_window_id(self, window_id):
+        if window_id != self.window_id:
+            self.window = self.display.create_resource_object('window', window_id)
+            self.root_window = self.window.get_geometry().root
+            self.window_id = window_id
+
 display = Xlib.display.Display()
+frame = Frame(display)
 
 ########################################################################
 # Connect to IBus daemon
@@ -276,7 +303,7 @@ def process_key_event(id_no, keyval, modmask, backslash, pressed = None):
     print '(ibus-process-key-event-cb %d %s)'%(id_no, lisp_boolean(handled))
 
 def set_cursor_location(id_no, x, y, w, h):
-    imcontexts[id_no].set_cursor_location(x, y, w, h)
+    imcontexts[id_no].set_cursor_location(frame.left + x, frame.top + y, w, h)
 
 def focus_in(id_no):
     imcontexts[id_no].focus_in()
@@ -301,6 +328,11 @@ def set_engine(id_no, name):
             break
     else:
         enable(id_no)
+
+def update_frame_coordinates(window_id = None):
+    if window_id:
+        frame.set_window_id(window_id)
+    frame.update_coordinates()
 
 ########################################################################
 # Experiment

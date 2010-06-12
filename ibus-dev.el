@@ -8,7 +8,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.1.1")
+(defconst ibus-mode-version "0.1.1.1")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -934,7 +934,6 @@ use either \\[customize] or the function `ibus-mode'."
 (defvar ibus-preedit-overlays nil)
 (defvar ibus-auxiliary-text "")
 (defvar ibus-auxiliary-shown nil)
-(defvar ibus-saved-frame-coordinates '(0 . 0))
 (defvar ibus-surrounding-text-modified nil)
 (defvar ibus-cursor-type-saved 0)
 (make-variable-buffer-local 'ibus-cursor-type-saved)
@@ -1521,78 +1520,44 @@ restart ibus-mode so that this settings may become effective."
 
 ;; Cursor location
 
-(defun ibus-frame-top-left-coordinates (&optional frame)
-  "Return the pixel coordinates of FRAME as a cons cell (LEFT . TOP),
-which are relative to top left corner of screen.
+(defun ibus-agent-update-frame-coordinates (&optional frame)
+  (ibus-log "update frame coordinates")
+  (ibus-agent-send "update_frame_coordinates(%s)"
+		   (frame-parameter frame 'window-id))
+  (setq ibus-cursor-prev-location nil))
 
-If FRAME is omitted, use selected-frame.
-
-Users can also get the frame coordinates by referring the variable
-`ibus-saved-frame-coordinates' just after calling this function."
-  ;; Note: This function was imported from pos-tip.el ver. 0.0.3
-  (ibus-log "get frame coordinates")
-  (with-current-buffer (get-buffer-create " *xwininfo*")
-    (let ((case-fold-search nil))
-      (buffer-disable-undo)
-      (erase-buffer)
-      (call-process shell-file-name nil t nil shell-command-switch
-		    (concat "xwininfo -id " (frame-parameter frame 'window-id)))
-      (goto-char (point-min))
-      (search-forward "\n  Absolute")
-      (setq ibus-cursor-prev-location nil
-	    ibus-saved-frame-coordinates
-	    (cons (progn (string-to-number (buffer-substring-no-properties
-					    (search-forward "X: ")
-					    (line-end-position))))
-		  (progn (string-to-number (buffer-substring-no-properties
-					    (search-forward "Y: ")
-					    (line-end-position)))))))))
-
-(defun ibus-compute-pixel-position (&optional pos window frame-coordinates)
-  "Return the absolute pixel coordinates of POS in WINDOW as a list like
-\(X Y H), here H is the pixel height of object at POS.
+(defun ibus-compute-pixel-position (&optional pos window)
+  "Return geometry of object at POS in WINDOW as a list like \(X Y H).
+X and Y are pixel coordinates relative to top left corner of frame which
+WINDOW is in. H is the pixel height of the object.
 
 Omitting POS and WINDOW means use current position and selected window,
-respectively.
-
-If FRAME-COORDINATES is omitted, automatically obtain the absolute
-coordinates of the top left corner of frame which WINDOW is on. Here,
-`top left corner of frame' represents the origin of `window-pixel-edges'
-and its coordinates are essential for calculating the return value. If
-non-nil, specifies the frame location as a cons cell like (LEFT . TOP).
-This option makes the calculations slightly faster, but can be used only
-when it's clear that frame is in the specified position. Users can get
-the previous values of frame coordinates by referring the variable
-`ibus-saved-frame-coordinates'."
+respectively."
   (unless window
     (setq window (selected-window)))
-  (let ((frame (window-frame window)))
-    (unless frame-coordinates
-      (ibus-frame-top-left-coordinates frame))
-    (let* ((x-y (or (pos-visible-in-window-p (or pos (window-point window)) window t)
-		    '(0 0)))
-	   (ax (+ (car ibus-saved-frame-coordinates)
-		  (car (window-inside-pixel-edges window))
-		  (car x-y)))
-	   (ay (+ (cdr ibus-saved-frame-coordinates)
-		  (cadr (window-pixel-edges window))
-		  (cadr x-y)))
-	   ;; `posn-object-width-height' returns an incorrect value
-	   ;; when the header line is displayed (Emacs bug #4426).
-	   (height (with-current-buffer (window-buffer window)
-		     (cond
-		      ((null header-line-format)
-		       (cdr (posn-object-width-height
-			     (posn-at-x-y (max (car x-y) 0) (cadr x-y) window))))
-		      ((and (boundp 'text-scale-mode-amount)
-			    (not (zerop text-scale-mode-amount)))
-		       (round (* (frame-char-height frame)
-				 (with-no-warnings
-				   (expt text-scale-mode-step
-					 text-scale-mode-amount)))))
-		      (t
-		       (frame-char-height frame))))))
-      (list ax ay height))))
+  (let* ((frame (window-frame window))
+	 (x-y (or (pos-visible-in-window-p (or pos (window-point window)) window t)
+		  '(0 0)))
+	 (ax (+ (car (window-inside-pixel-edges window))
+		(car x-y)))
+	 (ay (+ (cadr (window-pixel-edges window))
+		(cadr x-y)))
+	 ;; `posn-object-width-height' returns an incorrect value
+	 ;; when the header line is displayed (Emacs bug #4426).
+	 (height (with-current-buffer (window-buffer window)
+		   (cond
+		    ((null header-line-format)
+		     (cdr (posn-object-width-height
+			   (posn-at-x-y (max (car x-y) 0) (cadr x-y) window))))
+		    ((and (boundp 'text-scale-mode-amount)
+			  (not (zerop text-scale-mode-amount)))
+		     (round (* (frame-char-height frame)
+			       (with-no-warnings
+				 (expt text-scale-mode-step
+				       text-scale-mode-amount)))))
+		    (t
+		     (frame-char-height frame))))))
+    (list ax ay height)))
 
 ;;; TODO: FIXME: Does anyone know how to get the actual character height
 ;;;              even if the header line is displayed?
@@ -1600,13 +1565,12 @@ the previous values of frame coordinates by referring the variable
 (defun ibus-set-cursor-location (&optional prediction)
   (unless (and prediction
 	       (null ibus-prediction-window-position))
-    (let* ((rect (ibus-compute-pixel-position
-		  (if (and prediction
-			   (eq ibus-prediction-window-position 0)
-			   (not (minibufferp)))
-		      ibus-preedit-point
-		    (+ ibus-preedit-point ibus-preedit-curpos))
-		  nil ibus-saved-frame-coordinates)))
+    (let ((rect (ibus-compute-pixel-position
+		 (if (and prediction
+			  (eq ibus-prediction-window-position 0)
+			  (not (minibufferp)))
+		     ibus-preedit-point
+		   (+ ibus-preedit-point ibus-preedit-curpos)))))
       (ibus-log "cursor position (x y h): %s" rect)
       (unless (equal rect ibus-cursor-prev-location)
 	(setq ibus-cursor-prev-location rect)
@@ -1683,7 +1647,7 @@ i.e. input focus is in this window."
 		    ibus-preediting-p)
 	  (ibus-agent-receive)) ; Receive
 	(when ibus-frame-focus
-	  (ibus-frame-top-left-coordinates)
+	  (ibus-agent-update-frame-coordinates)
 	  (when ibus-preediting-p
 	    (ibus-remove-preedit)
 	    (ibus-show-preedit))))
@@ -1811,7 +1775,7 @@ i.e. input focus is in this window."
       (if ibus-preediting-p
 	  (ibus-remove-preedit)
 	(if (eq window-system 'x)
-	    (ibus-frame-top-left-coordinates)))
+	    (ibus-agent-update-frame-coordinates)))
       ;; Put String
       (setq ibus-preediting-p (current-buffer))
       (setq ibus-keymap-overlay (make-overlay (point-min) (1+ (point-max)) nil nil t))
@@ -2698,7 +2662,7 @@ ENGINE-NAME, if given as a string, specify input method engine."
       (unless (eq (selected-frame) ibus-selected-frame)
 	(when (and ibus-preediting-p
 		   (eq window-system 'x))
-	  (ibus-frame-top-left-coordinates)
+	  (ibus-agent-update-frame-coordinates)
 	  (ibus-remove-preedit)
 	  (ibus-show-preedit))
 	(setq ibus-selected-frame (selected-frame))
