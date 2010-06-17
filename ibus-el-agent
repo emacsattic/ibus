@@ -6,7 +6,7 @@
 
 # Author: S. Irie
 # Maintainer: S. Irie
-# Version: 0.1.1.2
+# Version: 0.1.1.3
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -315,9 +315,25 @@ def process_key_event(id_no, keyval, modmask, backslash, pressed = None):
     if backslash:
         keycode = display.keysym_to_keycode(backslash) - 8
     else:
-        keycode_tuple = display.keysym_to_keycodes(keyval)[0]
-        if keyval < 0x100 and keycode_tuple[1] & 1 != 0:
-            modmask |= modifier.SHIFT_MASK
+        keycodes = display.keysym_to_keycodes(keyval)
+        if modmask & modifier.SHIFT_MASK:
+            for keycode_tuple in keycodes:
+                if keycode_tuple[1] & 1:
+                    break
+            else:
+                keycode_tuple = keycodes[0]
+        elif keyval < 0x100:
+            for keycode_tuple in keycodes:
+                if keycode_tuple[1]:
+                    if keycode_tuple[1] > 1:
+                        keycode_tuple = keycodes[0]
+                    break
+            else:
+                keycode_tuple = keycodes[0]
+            if keycode_tuple[1] & 1:
+                modmask |= modifier.SHIFT_MASK
+        else:
+            keycode_tuple = keycodes[0]
         keycode = keycode_tuple[0] - 8
     if pressed != None:
         if not pressed:
