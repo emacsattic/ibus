@@ -6,7 +6,7 @@
 
 # Author: S. Irie
 # Maintainer: S. Irie
-# Version: 0.1.1
+# Version: 0.1.1.2
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -83,6 +83,35 @@ class Frame(object):
         self.root_window = None
         self.left = 0
         self.top = 0
+        self.focus = None
+        self.focus_cb_id = None
+
+    def __update_focus_cb(self, form):
+        focus = self.display.get_input_focus().focus
+        if focus != self.focus:
+            try:
+                tree = focus.query_tree()
+                parent = tree.parent
+                if parent == tree.root:
+                    print form % focus.id
+                else:
+                    print form % parent.id
+                self.focus = focus
+            except:
+                pass
+        return True
+
+    def stop_focus_observation(self):
+        self.focus = None
+        if self.focus_cb_id:
+            glib.source_remove(self.focus_cb_id)
+            self.focus_cb_id = None
+
+    def start_focus_observation(self, interval):
+        self.stop_focus_observation()
+        self.__update_focus_cb("(ibus-start-focus-observation-cb %d)")
+        self.focus_cb_id = glib.timeout_add(interval, self.__update_focus_cb,
+                                            "(ibus-focus-changed-cb %d)")
 
     def update_coordinates(self):
         if self.window:
@@ -333,6 +362,12 @@ def update_frame_coordinates(window_id = None):
     if window_id:
         frame.set_window_id(window_id)
     frame.update_coordinates()
+
+def start_focus_observation(interval):
+    frame.start_focus_observation(interval)
+
+def stop_focus_observation():
+    frame.stop_focus_observation()
 
 ########################################################################
 # Experiment

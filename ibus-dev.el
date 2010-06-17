@@ -8,7 +8,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.1.1.1")
+(defconst ibus-mode-version "0.1.1.2")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -450,17 +450,8 @@ directly as a shell command."
   :group 'ibus-expert)
 
 (defcustom ibus-focus-update-interval 0.3
-  "The window focus is checked with this cycle measured in seconds.
-When IBus is off or input focus is in the other application, the slower
-time cycle given by `ibus-focus-update-interval-long' is used instead."
-  :type 'number
-  :group 'ibus-expert)
-
-(defcustom ibus-focus-update-interval-long 1.0
-  "This value might be used as a slow time cycle for the observation
-of input focus instead of `ibus-focus-update-interval'.
-
-See `ibus-focus-update-interval' for details."
+  "Specify time interval (in seconds) that frame focus is checked
+periodically."
   :type 'number
   :group 'ibus-expert)
 
@@ -887,7 +878,7 @@ use either \\[customize] or the function `ibus-mode'."
 (defvar ibus-current-buffer nil)
 (defvar ibus-selected-frame nil)
 (defvar ibus-frame-focus nil)
-(defvar ibus-focus-update-timer nil)
+(defvar ibus-focused-window-id nil)
 (defvar ibus-string-insertion-failed nil)
 (defvar ibus-last-rejected-event nil)
 (defvar ibus-last-command nil)
@@ -1580,19 +1571,38 @@ respectively."
 
 ;; Frame input focuses
 
-(defun ibus-get-active-window-id ()
-  "Return the number of the window-system window which is foreground,
-i.e. input focus is in this window."
-  (let ((x-active-window (x-window-property "_NET_ACTIVE_WINDOW" nil "WINDOW" 0 nil t)))
-    (if x-active-window
-	;; It's possible that `x-active-window' take the value of 0. Why?
-	(condition-case err
-	    (+ (ash (car x-active-window) 16)  (cdr x-active-window))
-	  (wrong-type-argument -1)))))
+(defun ibus-agent-start-focus-observation ()
+  (setq ibus-focused-window-id nil)
+  (let ((time-limit (+ (float-time)
+		       (or (and (floatp ibus-agent-timeout)
+				ibus-agent-timeout)
+			   (/ ibus-agent-timeout 1000.0)))))
+    (ibus-agent-send-receive "start_focus_observation(%d)"
+			     (* ibus-focus-update-interval 1000))
+    (while (and (not (numberp ibus-focused-window-id))
+		(< (float-time) time-limit))
+      (ibus-agent-receive)))
+  (unless (numberp ibus-focused-window-id)
+    (ibus-mode-quit)
+    (error "Couldn't detect input focus. Turned off ibus-mode.")))
+
+(defun ibus-start-focus-observation-cb (window-id)
+  (setq ibus-focused-window-id window-id))
+
+(defun ibus-agent-stop-focus-observation ()
+  (setq ibus-focused-window-id nil)
+  (ibus-agent-send "stop_focus_observation()"))
+
+(defun ibus-focus-changed-cb (window-id)
+  (ibus-log "frame focus changed: %s" window-id)
+  (setq ibus-focused-window-id window-id)
+  (ibus-check-frame-focus))
 
 (defun ibus-change-x-display ()
   (let ((display (ibus-get-x-display)))
     (ibus-log "change display from %s to %s" ibus-selected-display display)
+    (if ibus-agent-process
+	(ibus-agent-stop-focus-observation))
     (setq ibus-agent-process (cdr (assoc display ibus-agent-process-alist)))
     (if ibus-agent-process
 	(setq ibus-selected-display display)
@@ -1605,22 +1615,21 @@ i.e. input focus is in this window."
 					       ibus-agent-process-alist)
 		ibus-selected-display display)
 	(ibus-mode-quit)
-	(error "Unable to launch agent for display %S. Turned off ibus-mode" display)))))
+	(error "Unable to launch agent for display %S. Turned off ibus-mode" display)))
+    (ibus-agent-start-focus-observation)))
 
 (defun ibus-change-focus (focus-in)
   (ibus-agent-send (if focus-in "focus_in(%d)" "focus_out(%d)")
 		   ibus-imcontext-id))
 
 (defun ibus-check-frame-focus (&optional focus-in)
-  (let* (active-win
-	 redirect
+  (let* (redirect
 	 (focused-p
 	  (and (eq window-system 'x)
-	       (setq active-win (ibus-get-active-window-id))
-	       (or (eq active-win
+	       (or (eq ibus-focused-window-id
 		       (string-to-number
 			(frame-parameter nil 'outer-window-id)))
-		   (eq active-win
+		   (eq ibus-focused-window-id
 		       (and (setq redirect
 				  (car (delq nil
 					     (mapcar (lambda (frame)
@@ -1653,21 +1662,6 @@ i.e. input focus is in this window."
 	    (ibus-show-preedit))))
       (unless focus-in
 	(ibus-check-current-buffer)))))
-
-(defun ibus-cancel-focus-update-timer ()
-  (when ibus-focus-update-timer
-    (cancel-timer ibus-focus-update-timer)
-    (setq ibus-focus-update-timer nil)))
-
-(defun ibus-start-focus-observation ()
-  (let ((cycle (if (or ibus-mode-map-prev-disabled
-		       (not ibus-imcontext-status)
-		       (not ibus-frame-focus))
-		   ibus-focus-update-interval-long
-		 ibus-focus-update-interval)))
-    (ibus-cancel-focus-update-timer)
-    (setq ibus-focus-update-timer
-	  (run-at-time cycle cycle 'ibus-check-frame-focus))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Preediting area
@@ -2075,11 +2069,13 @@ i.e. input focus is in this window."
 (defun ibus-process-signals (sexplist &optional passive)
   (let (rsexplist)
     (while sexplist
-      (let ((sexp (pop sexplist)))
+      (let* ((sexp (pop sexplist))
+	     (fun (car-safe sexp)))
 	(cond
-	 ((and (consp sexp)
-	       (symbolp (car sexp))
-	       (fboundp (car sexp)))
+	 ((eq fun 'ibus-focus-changed-cb)
+	  (apply 'run-with-timer 0 nil sexp))
+	 ((and (symbolp fun)
+	       (fboundp fun))
 	  (push sexp rsexplist))
 	 ((stringp sexp)
 	  (ibus-message "%s" sexp))
@@ -2374,7 +2370,9 @@ i.e. input focus is in this window."
 	 (modmask (pop decoded))
 	 (backslash (car decoded)))
     (when (numberp keyval)
-      (unless ibus-frame-focus (ibus-check-frame-focus t))
+      (unless ibus-frame-focus
+	(ibus-agent-start-focus-observation)
+	(ibus-check-frame-focus t))
       (ibus-check-current-buffer))
     (ibus-log "event: %s  keyval: %s  modmask: %s" event keyval modmask)
     (when (eq backslash ?|)
@@ -2553,7 +2551,6 @@ ENGINE-NAME, if given as a string, specify input method engine."
 (defun ibus-check-current-buffer ()
 ;  (ibus-log "check current buffer")
   (catch 'exit
-    (ibus-cancel-focus-update-timer)
     (setq ibus-last-rejected-event nil)
     (with-current-buffer (window-buffer)
       (let ((buffer (current-buffer))
@@ -2666,8 +2663,7 @@ ENGINE-NAME, if given as a string, specify input method engine."
 	  (ibus-remove-preedit)
 	  (ibus-show-preedit))
 	(setq ibus-selected-frame (selected-frame))
-	(ibus-update-cursor-color)))
-    (ibus-start-focus-observation)))
+	(ibus-update-cursor-color)))))
 
 (defun ibus-kill-buffer-function ()
   (ibus-destroy-imcontext))
@@ -2913,6 +2909,8 @@ ENGINE-NAME, if given as a string, specify input method engine."
 	(setq ibus-selected-display (ibus-get-x-display)
 	      ibus-agent-process-alist (list (cons ibus-selected-display
 						   ibus-agent-process)))
+	(let ((ibus-current-buffer (current-buffer)))
+	  (ibus-agent-start-focus-observation))
 	;; Turn on minor mode
 	(setq-default ibus-mode t)
 	(ibus-cleanup-variables)
@@ -2966,7 +2964,6 @@ ENGINE-NAME, if given as a string, specify input method engine."
   (ibus-activate-advices-inherit-im nil)
   (ibus-activate-advice-describe-key nil)
   (ibus-disable-isearch)
-  (ibus-cancel-focus-update-timer)
   (ibus-cleanup-preedit)
   (mapc (lambda (pair)
 	  (setq ibus-agent-process (cdr pair))
