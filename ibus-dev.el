@@ -8,7 +8,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.1.1.2")
+(defconst ibus-mode-version "0.1.1.4")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -2524,7 +2524,9 @@ ENGINE-NAME, if given as a string, specify input method engine."
     (ibus-set-keymap-parent)
     (when (and ibus-use-kana-onbiki-key
 	       ibus-kana-onbiki-x-keysym)
-      (ibus-update-kana-onbiki-key))))
+      (ibus-update-kana-onbiki-key))
+    (if isearch-mode
+	(isearch-update))))
 
 (defun ibus-toggle ()
   "Toggle IBus' input status."
