@@ -8,7 +8,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.1.1.4")
+(defconst ibus-mode-version "0.1.1.5")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -1649,7 +1649,7 @@ respectively."
 	    (setq ibus-keyboard-layout (ibus-get-keyboard-layout)))
 	(when (and ibus-use-kana-onbiki-key
 		   ibus-kana-onbiki-x-keysym)
-	  (ibus-update-kana-onbiki-key nil t))
+	  (ibus-update-kana-onbiki-key nil (not focus-in)))
 	(ibus-set-keymap-parent)
 	(ibus-change-focus ibus-frame-focus) ; Send
 	(unless (or ibus-frame-focus
