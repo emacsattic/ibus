@@ -8,7 +8,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.1.1.5")
+(defconst ibus-mode-version "0.1.1.6")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -1116,7 +1116,7 @@ use either \\[customize] or the function `ibus-mode'."
 (defun ibus-set-keymap-parent ()
   (set-keymap-parent ibus-mode-map
 		     (cond
-		      ((or (not ibus-frame-focus)
+		      ((or (not (eq window-system 'x))
 			   ibus-mode-map-prev-disabled)
 		       (ibus-log "use empty keymap")
 		       nil)
