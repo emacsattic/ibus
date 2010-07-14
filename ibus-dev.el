@@ -8,7 +8,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.1.1.6")
+(defconst ibus-mode-version "0.1.1.7")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -495,12 +495,6 @@ number of seconds, otherwise an integer the milliseconds."
 (defvar ibus-debug nil)
 (defvar ibus-log-buffer "*ibus-mode log*")
 
-(defvar ibus-meta-key-exists
-  (string< "" (shell-command-to-string "xmodmap -pke | grep '= Meta'"))
-  "t is set in this variable if there is mata modifier key in the
-keyboard. When automatic detection doesn't go well, please set the
-value manually before ibus.el is loaded.")
-
 (defvar ibus-agent-buffer-name " *IBus*")
 
 (defvar ibus-incompatible-major-modes
@@ -523,16 +517,22 @@ unconditionally inherited.")
 ;; Constants
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defvar ibus-modifier-alist
-  (mapcar (lambda (pair)
-	    (cons (car pair)
-		  (lsh 1 (cdr pair))))
-	  `((shift . 0)
-	    (control . 2)
-	    (,(if ibus-meta-key-exists 'alt 'meta) . 3)
-	    (super . 26)
-	    (hyper . 27)
-	    ,@(if ibus-meta-key-exists '((meta . 28))))))
+(defvar ibus-modifier-alists
+  '((
+     (shift . 0)
+     (control . 2)
+     (alt . 3)
+     (super . 26)
+     (hyper . 27)
+     (meta . 28)
+     )
+    (
+     (shift . 0)
+     (control . 2)
+     (meta . 3)
+     (super . 26)
+     (hyper . 27)
+     )))
 
 (defvar ibus-alt-modifier-alist
   '(
@@ -853,6 +853,8 @@ use either \\[customize] or the function `ibus-mode'."
 (defvar ibus-preedit-show-hook nil)
 
 ;; Manage key bindings
+(defvar ibus-meta-key-exist-p nil)
+(defvar ibus-modifier-alist nil)
 (defvar ibus-mode-map nil)
 (defvar ibus-mode-preedit-map nil)
 (defvar ibus-mode-common-map nil)
@@ -987,10 +989,10 @@ use either \\[customize] or the function `ibus-mode'."
 		 (>= keyval ?a)
 		 (<= keyval ?z))
 	    (setq keyval (- keyval 32)))
-      (if (not (zerop (logand modmask 8))) ; 8 = 2^3 => Alt keys
-	  (setq keyval
-		(or (cdr (assq keyval ibus-alt-modifier-alist))
-		    keyval)))
+      (unless (or (zerop (logand modmask 8)) ; 8 = 2^3 => Alt keys
+		  ibus-meta-key-exist-p)
+	(setq keyval (or (cdr (assq keyval ibus-alt-modifier-alist))
+			 keyval)))
       (if (and ibus-use-kana-onbiki-key
 	       ibus-kana-onbiki-key-symbol)
 	  (cond
@@ -1015,9 +1017,10 @@ use either \\[customize] or the function `ibus-mode'."
 	     (eq bas ?\xa5) ; ¥
 	     (not ibus-mode-map-prev-disabled))
 	(setq bas ibus-kana-onbiki-key-symbol))
-    (if (logand modmask 8) ; 8 = 2^3 => Alt keys
-	(setq bas (or (car (rassq bas ibus-alt-modifier-alist))
-		      bas)))
+    (unless (or (zerop (logand modmask 8)) ; 8 = 2^3 => Alt keys
+		ibus-meta-key-exist-p)
+      (setq bas (or (car (rassq bas ibus-alt-modifier-alist))
+		    bas)))
     (when bas
       (dotimes (i 28)
 	(if (and (not (zerop (setq mask1 (logand modmask (lsh 1 i)))))
@@ -1127,6 +1130,20 @@ use either \\[customize] or the function `ibus-mode'."
 		       (ibus-log "use minimum keymap")
 		       ibus-mode-minimum-map))))
 
+(defun ibus-update-meta-key-exist-p ()
+  "Return t if there is mata modifier key on the keyboard of currently selected
+display."
+  (setq ibus-meta-key-exist-p
+	(string< "" (shell-command-to-string "xmodmap -pke | grep '= Meta'"))))
+
+(defun ibus-set-modifier-alist ()
+  (setq ibus-modifier-alist (mapcar (lambda (pair)
+				      (cons (car pair)
+					    (lsh 1 (cdr pair))))
+				    (if ibus-meta-key-exist-p
+					(car ibus-modifier-alists)
+				      (cadr ibus-modifier-alists)))))
+
 (defun ibus-enable-kana-onbiki-key (&optional keysym)
   (unless keysym (setq keysym ibus-kana-onbiki-x-keysym))
   (when keysym
@@ -1209,11 +1226,11 @@ use either \\[customize] or the function `ibus-mode'."
 	     (mods (cdr key)))
 	(if (stringp bas)
 	    (setq bas (string-to-char bas)))
-	(when (memq 'alt mods)
-	  (unless ibus-meta-key-exists
-	    (setq mods (cons 'meta (delq 'alt mods))))
+	(when (and (memq 'alt mods)
+		   (not ibus-meta-key-exist-p))
 	  (setq bas (or (car (rassq bas ibus-alt-modifier-alist))
-			bas)))
+			bas)
+		mods (cons 'meta (delq 'alt mods))))
 	(define-key map (vector (nconc mods (list bas))) 'ibus-handle-event)
 	(setq keys (cdr keys))))
     map))
@@ -1260,6 +1277,8 @@ use either \\[customize] or the function `ibus-mode'."
     (when (memq symbol '(nil ibus-kana-onbiki-x-keysym))
       (ibus-update-kana-onbiki-key t))
     (ibus-update-kana-onbiki-key))
+  (ibus-update-meta-key-exist-p)
+  (ibus-set-modifier-alist)
   (when (null symbol)
     (ibus-log "update ibus-mode-minimum-map")
     (if (keymapp ibus-mode-minimum-map)
@@ -1616,7 +1635,8 @@ respectively."
 		ibus-selected-display display)
 	(ibus-mode-quit)
 	(error "Unable to launch agent for display %S. Turned off ibus-mode" display)))
-    (ibus-agent-start-focus-observation)))
+    (ibus-agent-start-focus-observation)
+    (ibus-update-key-bindings)))
 
 (defun ibus-change-focus (focus-in)
   (ibus-agent-send (if focus-in "focus_in(%d)" "focus_out(%d)")
