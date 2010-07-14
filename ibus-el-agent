@@ -6,7 +6,7 @@
 
 # Author: S. Irie
 # Maintainer: S. Irie
-# Version: 0.1.1.3
+# Version: 0.1.1.8
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -312,10 +312,21 @@ def destroy_imcontext(id_no):
         imcontexts[id_no] = None
 
 def process_key_event(id_no, keyval, modmask, backslash, pressed = None):
+    def update_keymap():
+        display._update_keymap(display.display.info.min_keycode,
+                               (display.display.info.max_keycode
+                                - display.display.info.min_keycode + 1))
+
     if backslash:
         keycode = display.keysym_to_keycode(backslash) - 8
+        if keycode < 0:
+            update_keymap()
+            keycode = display.keysym_to_keycode(backslash) - 8
     else:
         keycodes = display.keysym_to_keycodes(keyval)
+        if not keycodes:
+            update_keymap()
+            keycodes = display.keysym_to_keycodes(keyval) or [(0, 0)]
         if modmask & modifier.SHIFT_MASK:
             for keycode_tuple in keycodes:
                 if keycode_tuple[1] & 1:
