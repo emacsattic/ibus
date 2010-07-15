@@ -8,7 +8,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.1.1.7")
+(defconst ibus-mode-version "0.1.1.9")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -2418,8 +2418,9 @@ respectively."
 	;; IMContext is not registered or key event is not recognized
 	(ibus-process-key-event-cb ibus-imcontext-id nil))))
   ;; Repair post-command-hook
-  (unless (memq 'ibus-fallback-pre-function
-		(default-value 'pre-command-hook))
+  (when (and ibus-mode
+	     (not (memq 'ibus-fallback-pre-function
+			(default-value 'pre-command-hook))))
     (when (and (local-variable-p 'post-command-hook)
 	       (not (memq t post-command-hook)))
       (if post-command-hook
@@ -2573,6 +2574,9 @@ ENGINE-NAME, if given as a string, specify input method engine."
 (defun ibus-check-current-buffer ()
 ;  (ibus-log "check current buffer")
   (catch 'exit
+    (unless ibus-mode
+      (remove-hook 'post-command-hook 'ibus-check-current-buffer)
+      (throw 'exit nil))
     (setq ibus-last-rejected-event nil)
     (with-current-buffer (window-buffer)
       (let ((buffer (current-buffer))
