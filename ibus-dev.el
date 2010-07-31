@@ -8,7 +8,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.1.1.10")
+(defconst ibus-mode-version "0.1.1.11")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -1543,35 +1543,40 @@ WINDOW is in. H is the pixel height of the object.
 
 Omitting POS and WINDOW means use current position and selected window,
 respectively."
-  (unless window
-    (setq window (selected-window)))
-  (let* ((frame (window-frame window))
-	 (x-y (or (pos-visible-in-window-p (or pos (window-point window)) window t)
-		  '(0 0)))
+  (let* ((frame (window-frame (or window (selected-window))))
+	 (posn (posn-at-point (or pos (window-point window)) window))
+	 (line (cdr (posn-actual-col-row posn)))
+	 (line-height (and line
+			   (or (window-line-height line window)
+			       (and (redisplay t)
+				    (window-line-height line window)))))
+	 (x-y (or (posn-x-y posn)
+		  (let ((geom (pos-visible-in-window-p
+			       (or pos (window-point window)) window t)))
+		    (and geom (cons (car geom) (cadr geom))))
+		  '(0 . 0)))
 	 (ax (+ (car (window-inside-pixel-edges window))
 		(car x-y)))
 	 (ay (+ (cadr (window-pixel-edges window))
-		(cadr x-y)))
-	 ;; `posn-object-width-height' returns an incorrect value
-	 ;; when the header line is displayed (Emacs bug #4426).
-	 (height (with-current-buffer (window-buffer window)
-		   (cond
-		    ((null header-line-format)
-		     (cdr (posn-object-width-height
-			   (posn-at-x-y (max (car x-y) 0) (cadr x-y) window))))
-		    ((and (bound-and-true-p text-scale-mode)
-			  (not (zerop (with-no-warnings
-					text-scale-mode-amount))))
-		     (round (* (frame-char-height frame)
-			       (with-no-warnings
-				 (expt text-scale-mode-step
-				       text-scale-mode-amount)))))
-		    (t
-		     (frame-char-height frame))))))
+		(or (nth 2 line-height) (cdr x-y))))
+	 (height (or (car line-height)
+		     (with-current-buffer (window-buffer window)
+		       (cond
+			;; `posn-object-width-height' returns an incorrect value
+			;; when the header line is displayed (Emacs bug #4426).
+			((and posn
+			      (null header-line-format))
+			 (cdr (posn-object-width-height posn)))
+			((and (bound-and-true-p text-scale-mode)
+			      (not (zerop (with-no-warnings
+					    text-scale-mode-amount))))
+			 (round (* (frame-char-height frame)
+				   (with-no-warnings
+				     (expt text-scale-mode-step
+					   text-scale-mode-amount)))))
+			(t
+			 (frame-char-height frame)))))))
     (list ax ay height)))
-
-;;; TODO: FIXME: Does anyone know how to get the actual character height
-;;;              even if the header line is displayed?
 
 (defun ibus-set-cursor-location (&optional prediction)
   (unless (and prediction
