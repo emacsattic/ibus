@@ -6,7 +6,7 @@
 
 # Author: S. Irie
 # Maintainer: S. Irie
-# Version: 0.1.1.8
+# Version: 0.1.1.12
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -63,6 +63,23 @@ import re
 
 import ibus
 from ibus import modifier
+
+########################################################################
+# Process command line option
+########################################################################
+
+start_ibus_daemon = True
+
+if __name__ == "__main__":
+
+    from optparse import OptionParser
+    parser = OptionParser()
+    parser.add_option("-q", "--quit",
+                      action="store_true", dest="quit", default=False,
+                      help="quit if ibus-daemon is not running")
+    options, args = parser.parse_args()
+    if options.quit:
+        start_ibus_daemon = False
 
 ########################################################################
 # Setup Xlib
@@ -135,6 +152,9 @@ frame = Frame(display)
 try:
     bus = ibus.Bus()
 except:
+    if not start_ibus_daemon:
+        print '(error "ibus-daemon is not running")'
+        exit(1)
     print "Launch IBus daemon..."
     import os
     import time

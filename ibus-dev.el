@@ -8,7 +8,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.1.1.11")
+(defconst ibus-mode-version "0.1.1.12")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -486,6 +486,11 @@ the milliseconds."
 particular cases such as focusing out. A floating point number means the
 number of seconds, otherwise an integer the milliseconds."
   :type 'number
+  :group 'ibus-expert)
+
+(defcustom ibus-agent-start-ibus-daemon t
+  "Non-nil means start ibus-daemon automatically if it is not running."
+  :type 'boolean
   :group 'ibus-expert)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1937,11 +1942,12 @@ respectively."
 	 (buffer (progn
 		   (string-match "\\(\\**\\)$" ibus-agent-buffer-name)
 		   (replace-match (concat "(" display ")\\1")
-				  t nil ibus-agent-buffer-name))))
+				  t nil ibus-agent-buffer-name)))
+	 (args (unless ibus-agent-start-ibus-daemon '("-q"))))
     (if ibus-python-shell-command-name
-	(start-process "ibus-agent" buffer ibus-python-shell-command-name
-		       (expand-file-name ibus-agent-file-name))
-      (start-process "ibus-agent" buffer ibus-agent-file-name))))
+	(apply 'start-process "ibus-agent" buffer ibus-python-shell-command-name
+	       (expand-file-name ibus-agent-file-name) args)
+      (apply 'start-process "ibus-agent" buffer ibus-agent-file-name args))))
 
 (defun ibus-agent-start ()
   (if (and (processp ibus-agent-process)
