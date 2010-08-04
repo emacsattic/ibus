@@ -8,7 +8,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.1.1.13")
+(defconst ibus-mode-version "0.1.1.14")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -488,7 +488,7 @@ number of seconds, otherwise an integer the milliseconds."
   :type 'number
   :group 'ibus-expert)
 
-(defcustom ibus-agent-start-ibus-daemon t
+(defcustom ibus-agent-start-ibus-daemon nil
   "Specify what to do for ibus-daemon not running.
 The value nil means do nothing, so ibus-mode will stop immediately.
 If the value is a function, start the daemon automatically if the
