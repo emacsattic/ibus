@@ -8,7 +8,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.1.1.12")
+(defconst ibus-mode-version "0.1.1.13")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -489,8 +489,15 @@ number of seconds, otherwise an integer the milliseconds."
   :group 'ibus-expert)
 
 (defcustom ibus-agent-start-ibus-daemon t
-  "Non-nil means start ibus-daemon automatically if it is not running."
-  :type 'boolean
+  "Specify what to do for ibus-daemon not running.
+The value nil means do nothing, so ibus-mode will stop immediately.
+If the value is a function, start the daemon automatically if the
+function returns non-nil and the daemon is not running. The other
+non-nil value means start the daemon unconditionally."
+  :type '(choice (const :tag "Do nothing (nil)" nil)
+		 (const :tag "Start ibus-daemon (t)" t)
+		 (function :tag "According to function"
+			   (lambda () (equal (getenv "GTK_IM_MODULE") "ibus"))))
   :group 'ibus-expert)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1943,7 +1950,10 @@ respectively."
 		   (string-match "\\(\\**\\)$" ibus-agent-buffer-name)
 		   (replace-match (concat "(" display ")\\1")
 				  t nil ibus-agent-buffer-name)))
-	 (args (unless ibus-agent-start-ibus-daemon '("-q"))))
+	 (args (unless (if (functionp ibus-agent-start-ibus-daemon)
+			   (funcall ibus-agent-start-ibus-daemon)
+			 ibus-agent-start-ibus-daemon)
+		 '("-q"))))
     (if ibus-python-shell-command-name
 	(apply 'start-process "ibus-agent" buffer ibus-python-shell-command-name
 	       (expand-file-name ibus-agent-file-name) args)
