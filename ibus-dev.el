@@ -8,7 +8,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.1.1.14")
+(defconst ibus-mode-version "0.1.1.15")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -2807,7 +2807,8 @@ ENGINE-NAME, if given as a string, specify input method engine."
   (let ((overriding-terminal-local-map nil)
 	(prompt (isearch-message-prefix))
 	(minibuffer-local-map (with-no-warnings isearch-minibuffer-local-map))
-	(current-input-method nil)
+	(current-input-method (unless (equal current-input-method "IBus")
+				current-input-method))
 	(ibus-imcontext-temporary-for-minibuffer nil)
 	(ibus-isearch-minibuffer nil)
 	(ibus-current-buffer nil)
@@ -2847,7 +2848,8 @@ ENGINE-NAME, if given as a string, specify input method engine."
 
 (defadvice isearch-printing-char
   (around ibus-isearch-printing-char ())
-  (if ibus-imcontext-status
+  (if (and ibus-imcontext-status
+	   (null current-input-method))
       (let ((current-input-method "IBus"))
 	ad-do-it)
     ad-do-it))
@@ -2867,9 +2869,13 @@ ENGINE-NAME, if given as a string, specify input method engine."
   (if (and ibus-imcontext-status
 	   (not nonincremental)
 	   (not (eq this-command 'isearch-edit-string)))
-      (let ((current-input-method "IBus")
-	    (current-input-method-title "IBus"))
-	ad-do-it)
+      (if current-input-method-title
+	  (let ((current-input-method-title
+		 (format "%s IBus" current-input-method-title)))
+	    ad-do-it)
+	(let ((current-input-method "IBus")
+	      (current-input-method-title "IBus"))
+	  ad-do-it))
     ad-do-it))
 
 ;; Advices for `isearch-x.el'
@@ -2888,9 +2894,15 @@ ENGINE-NAME, if given as a string, specify input method engine."
 
 (defadvice isearch-process-search-multibyte-characters
   (around ibus-isearch-process-search-characters ())
-  (if (and (string= current-input-method "IBus")
+  (if (and ibus-mode
 	   (eq this-command 'isearch-printing-char))
-      (ibus-isearch-process-search-characters last-char)
+      (if ibus-imcontext-status
+	  (ibus-isearch-process-search-characters last-char)
+	(let ((ibus-imcontext-temporary-for-minibuffer nil))
+	  (remove-hook 'post-command-hook 'ibus-check-current-buffer)
+	  (unwind-protect
+	      ad-do-it
+	    (add-hook 'post-command-hook 'ibus-check-current-buffer))))
     ad-do-it))
 
 ;; Commands and functions
