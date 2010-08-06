@@ -8,7 +8,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.1.1.16")
+(defconst ibus-mode-version "0.1.1.17")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -2109,7 +2109,12 @@ respectively."
       (ibus-do-update-preedit))))
 
 (defun ibus-process-signals (sexplist &optional passive)
-  (let (rsexplist)
+  (let (rsexplist
+	(need-check (and passive
+			 (null ibus-isearch-minibuffer)
+			 (buffer-live-p ibus-current-buffer)
+			 (buffer-local-value 'isearch-mode ibus-current-buffer)))
+	resume-preedit)
     (while sexplist
       (let* ((sexp (pop sexplist))
 	     (fun (car-safe sexp)))
@@ -2118,7 +2123,15 @@ respectively."
 	  (apply 'run-with-timer 0 nil sexp))
 	 ((and (symbolp fun)
 	       (fboundp fun))
-	  (push sexp rsexplist))
+	  (push sexp rsexplist)
+	  (if (and need-check
+		   (not resume-preedit)
+		   (memq fun '(ibus-commit-text-cb
+			       ibus-update-preedit-text-cb
+			       ibus-hide-preedit-text-cb
+			       ibus-show-preedit-text-cb
+			       ibus-delete-surrounding-text-cb)))
+	      (setq resume-preedit t)))
 	 ((stringp sexp)
 	  (ibus-message "%s" sexp))
 	 (t
@@ -2137,7 +2150,10 @@ respectively."
 	      (setq ibus-callback-queue queue1))
 	    (setq unread-command-events
 		  (cons 'ibus-receive-event
-			(delq 'ibus-receive-event unread-command-events))))
+			(delq 'ibus-receive-event unread-command-events)))
+	    (if resume-preedit
+		(setq unread-command-events
+		      (cons ?a (cons 'ibus-resume-preedit unread-command-events)))))
 	(when (buffer-live-p ibus-current-buffer)
 	  (with-current-buffer ibus-current-buffer
 	    (ibus-exec-callback-1 (nreverse rsexplist))
