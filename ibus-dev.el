@@ -8,7 +8,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.1.1.15")
+(defconst ibus-mode-version "0.1.1.16")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -2815,7 +2815,8 @@ ENGINE-NAME, if given as a string, specify input method engine."
 	str junk-hist)
     (add-hook 'post-command-hook 'ibus-isearch-read-string-pre-function t)
     (if (eq (car unread-command-events) 'ibus-resume-preedit)
-	(setq unread-command-events (cdr unread-command-events))
+	(setq unread-command-events (cdr unread-command-events)
+	      ibus-surrounding-text-modified nil)
       (setq unread-command-events (cons last-char unread-command-events)))
     (setq str (read-string prompt isearch-string 'junk-hist nil t)
 	  isearch-string ""
