@@ -8,7 +8,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.1.1.17")
+(defconst ibus-mode-version "0.1.1.18")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -143,16 +143,16 @@
   :group 'ibus)
 
 (defcustom ibus-mode-local t
-  "If the value is non-nil, IMContexts are registered for each buffer
-so that the input method of buffers can be toggled individually.
-Otherwise, the input method is globally toggled."
+  "Non-nil means input statuses can be individually switched at each
+buffer by using multiple input contexts. Otherwise, the input status
+is globally changed for all buffers."
   :type 'boolean
   :group 'ibus-basic)
 
 (defcustom ibus-imcontext-temporary-for-minibuffer t
-  "If non-nil, an one-time IMContext is used for a minibuffer so that
-the minibuffer always starts with IBus's input status off. This option
-is effective only when the option `ibus-mode-local' is active (non-nil)."
+  "Non-nil means use one-time input context at minibuffer so that
+the minibuffer input starts with IBus' input status off. This option
+is ineffectual unless `ibus-mode-local' is non-nil."
   :type 'boolean
   :group 'ibus-basic)
 
@@ -163,7 +163,7 @@ is effective only when the option `ibus-mode-local' is active (non-nil)."
       (ibus-setup-isearch)))
 
 (defcustom ibus-use-in-isearch-window t
-  "If non-nil, IBus can be used with isearch-mode. Otherwise, it can't."
+  "Non-nil means IBus can be used together with isearch-mode."
   :set 'ibus-customize-isearch
   :type 'boolean
   :group 'ibus-basic)
@@ -219,11 +219,13 @@ is effective only when the option `ibus-mode-local' is active (non-nil)."
     (kp-7)
     (kp-8)
     (kp-9))
-  "This list indicates which keystrokes IBus takes over at both direct
-insert mode and preediting mode. You can also add/remove the elements
-using the function `ibus-define-common-key'.
-NOTICE: Don't set prefix keys in this option, such as ESC and C-x.
-If you do so, operating Emacs might become impossible."
+  "List of keystrokes that IBus takes over regardless of input status.
+To add or remove the elements, you should use a function
+`ibus-define-common-key'. Note that `meta' modifier in the element
+doesn't indicate alt keys but actual meta key.
+
+WARNING: Don't set an entry of prefix key such as ESC and C-x, or
+key sequences starting with the prefix become unusable."
   :set 'ibus-customize-key
   :type '(repeat (list :format "%v"
 		       (set :format "%v"
@@ -264,9 +266,10 @@ If you do so, operating Emacs might become impossible."
     (delete)
     (kp-enter)
     (kp-tab))
-  "This list indicates which keystrokes IBus takes over when the
-preediting area exists. You can also add/remove the elements using
-the function `ibus-define-preedit-key'."
+  "List of keystrokes that IBus takes over only when preediting.
+To add or remove the elements, you should use a function
+`ibus-define-preedit-key'. Note that `meta' modifier in the element
+doesn't indicate alt keys but actual meta key."
   :set 'ibus-customize-key
   :type '(repeat (list :format "%v"
 		       (set :format "%v"
@@ -283,42 +286,43 @@ the function `ibus-define-preedit-key'."
   :group 'ibus-basic)
 
 (defcustom ibus-use-kana-onbiki-key nil
-  "If you use Japanese kana typing method with jp-106 keyboard, turn
-on (non-nil) this option to input a kana prolonged sound mark (`ー')
-without pushing the shift key.
- This option is made effectual by temporarily modifying the X-window
-system's keyboard configurations with a shell command `xmodmap'."
+  "Non-nil means you can input a kana prolonged sound mark (\"ー\")
+without pushing the shift key when using Japanese kana typing method
+with jp-106 keyboard.
+
+This option uses a shell command \"xmodmap\" to modify X's keymap."
   :set 'ibus-customize-key
   :type 'boolean
   :group 'ibus-basic)
 
 (defcustom ibus-simultaneous-pressing-time nil
-  "If you use Japanese thumb shift typing method on IBus-Anthy,
-specify the time interval in seconds. Two keystrokes within this time
-interval are sent to IBus as a simultaneous keystroke."
+  "Maximum time interval that two keystrokes are recognized as a
+simultaneous keystroke. Measured in seconds. The value nil means
+any keystrokes are recognized as separate ones.
+
+You must specify the time interval if using Japanese thumb shift
+typing method with IBus-Anthy."
   :type '(choice (const :tag "none" nil)
 		 (number :tag "interval (sec.)" :value 0.1))
   :group 'ibus-basic)
 
 (defcustom ibus-undo-by-committed-string nil
-  "If the value is nil, undo is performed bringing some short
-committed strings together or dividing the long committed string
-within the range which does not exceed 20 columns. Otherwise, undo
-is performed to each committed string."
+  "Non-nil means perform undoing to each committed string.
+Otherwise, insertions of committed strings modify undo boundaries to
+simulate `self-insert-command' so that undo is performed by nearly 20
+columns."
   :type 'boolean
   :group 'ibus-basic)
 
 (defcustom ibus-clear-preedit-when-unexpected-event nil
-  "If the value is non-nil, the preediting area is cleared in the
-situations that the unexpected event happens during preediting.
-The unexpected event is, for example, that the string is pasted
-with the mouse."
+  "If non-nil, clear preediting area when an unexpected event happens.
+The unexpected event is, for example, string insertion by mouse clicking."
   :type 'boolean
   :group 'ibus-basic)
 
 ;; Appearance
 (defgroup ibus-appearance nil
-  "Faces, candidate window, etc."
+  "Behaviors of cursor, candidate window, etc."
   :group 'ibus)
 
 (defun ibus-customize-cursor-color (var value)
@@ -329,12 +333,12 @@ with the mouse."
 
 (defcustom ibus-cursor-color
   nil
-  "If the value is a string, it specifies the cursor color applied
-when IBus is on. If a cons cell, its car and cdr are the cursor colors
-which indicate that IBus is on and off, respectively. If a list, the
-first, second and third (if any) elements correspond to that IBus is
-on, off and disabled, respectively. The value nil means that the cursor
-color is not controlled at all."
+  "Specify cursor color(s) corresponding to ibus' status.
+If the value is a string, specify the cursor color applied when IBus is
+on. If a cons cell, its car and cdr are the cursor colors which indicate
+that IBus is on and off, respectively. If a list, the first, second and
+third (if any) elements correspond to that IBus is on, off and disabled,
+respectively. The value nil means don't change the cursor color at all."
   :set 'ibus-customize-cursor-color
   :type '(choice (const :tag "none (nil)" nil)
 		 (color :tag "red" :format "red (%{sample%})\n" :value "red")
@@ -357,9 +361,8 @@ color is not controlled at all."
 
 (defcustom ibus-isearch-cursor-type
   0
-  "This option specifies the cursor shape which is applied when
-isearch-mode is active. If an integer 0, this option is not active so
-that the cursor shape is not changed.
+  "Cursor shape which is applied when isearch-mode is active.
+A value of integer 0 means don't change the cursor shape.
 See `cursor-type'."
   :type '(choice (const :tag "don't specify (0)" 0)
 		 (const :tag "use frame parameter" t)
@@ -378,9 +381,9 @@ See `cursor-type'."
 
 (defcustom ibus-cursor-type-for-candidate
   'bar
-  "This option specifies the cursor shape which is applied when the
-preediting area shows conversion candidates. If an integer 0, this
-option is not active so that the cursor shape is not changed.
+  "Cursor shape which is applied when showing conversion candidates
+within the preediting area. A value of integer 0 means don't change
+the cursor shape.
 See `cursor-type'."
   :type '(choice (const :tag "don't specify (0)" 0)
 		 (const :tag "use frame parameter" t)
@@ -399,9 +402,9 @@ See `cursor-type'."
 
 (defcustom ibus-put-cursor-on-candidate
   t
-  "When the preediting area shows conversion candidates, the cursor
-is put on the selected segment if this option is non-nil. Otherwise,
-the cursor is put to the tail of the preediting area."
+  "Non-nil means put cursor on a selected segment of preediting area.
+Otherwise, the cursor is put to the tail of the preediting area when
+showing conversion candidates."
   :type 'boolean
   :group 'ibus-appearance)
 
@@ -409,8 +412,9 @@ the cursor is put to the tail of the preediting area."
   0
   "Specify position showing a prediction window of some input methods
 such as ibus-mozc. A value of t means show it under cursor. An integer
-0 means under the start point of preediting text. If you won't use
-prediction window, you can set nil not to send the coordinates to IBus."
+0 means under the start point of preediting area. If you won't use
+prediction window at all, you can set nil in order not to send data of
+the coordinates to ibus-daemon."
   :type '(choice (const :tag "Don't use prediction" nil)
 		 (const :tag "Head of preediting area" 0)
 		 (const :tag "Below cursor" t))
@@ -436,55 +440,58 @@ prediction window, you can set nil not to send the coordinates to IBus."
       (if (file-exists-p file-name)
 	  (setq dir-list nil)))
     file-name)
-  "Specify file name of the agent script of ibus-mode.
-If `ibus-python-shell-command-name' is nil, the agent must be executable."
+  "File name of the agent script used for communicating with
+ibus-daemon and X servers. If `ibus-python-shell-command-name' is
+nil, the agent is executed directly as a shell command so it must
+be executable."
   :type '(file :must-match t)
   :group 'ibus-expert)
 
 (defcustom ibus-python-shell-command-name "python"
-  "Specify shell command for executing Python interpreter, which is
-used for invoking ibus-el-agent. nil means execute the agent
+  "String specifying shell command of Python interpreter, which is
+used for executing ibus-el-agent. The value nil means execute the agent
 directly as a shell command."
   :type '(choice (const :tag "Execute agent directly (nil)" nil)
 		 (file :tag "Path of interpreter" :must-match t))
   :group 'ibus-expert)
 
 (defcustom ibus-focus-update-interval 0.3
-  "Specify time interval (in seconds) that frame focus is checked
-periodically."
+  "Time interval (in seconds) for checking frame focus periodically."
   :type 'number
   :group 'ibus-expert)
 
 (defcustom ibus-kana-onbiki-x-keysym "F24"
-  "When Japanese prolonged sound mark (onbiki) key is used, this
-option specifies the substitute KeySym name used in X window system for
-the key. This program sets the substitute KeySym for backslash key to
-distinguish it from yen-mark key."
+  "String specifying a name of X keysym which is used as a substitute
+of keysym corresponding to Japanese prolonged sound mark (onbiki) key. The
+value nil means don't use the substitutive keysym. ibus-mode modifies X's
+keymap according to this option in order to distinguish backslash key from
+yen-mark key. This option is ineffectual unless using jp-106 keyboard."
   :set 'ibus-customize-key
   :type 'string
   :group 'ibus-expert)
 
 (defcustom ibus-kana-onbiki-key-symbol 'f24
-  "When Japanese prolonged sound mark (onbiki) key is used, this
-option specifies the event corresponding to the substitute KeySym given
-in `ibus-kana-onbiki-x-keysym' as a symbol. This program sets the
-substitute KeySym for backslash key to distinguish it from yen-mark key."
+  "Symbol or integer specifying an event of Japanese prolonged sound
+mark (onbiki) key. The value nil means don't use that key. If setting
+`ibus-kana-onbiki-x-keysym' a substitutive X keysym, you must specify
+the event corresponding to that keysym. This option is ineffectual
+unless using jp-106 keyboard."
   :set 'ibus-customize-key
   :type '(choice (symbol)
 		 (const :tag "none" nil))
   :group 'ibus-expert)
 
 (defcustom ibus-agent-timeout 3.0
-  "Specify the maximum waiting time for data reception from IBus.
+  "Maximum waiting time for data reception from IBus.
 A floating point number means the number of seconds, otherwise an integer
 the milliseconds."
   :type 'number
   :group 'ibus-expert)
 
 (defcustom ibus-agent-buffering-time 50
-  "Specify the time waiting after starting data reception for some
-particular cases such as focusing out. A floating point number means the
-number of seconds, otherwise an integer the milliseconds."
+  "Waiting time for data reception which happen in some particular
+cases such as focusing out. A floating point number means the number of
+seconds, otherwise an integer the milliseconds."
   :type 'number
   :group 'ibus-expert)
 
