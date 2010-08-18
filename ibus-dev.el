@@ -8,7 +8,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.1.1.18")
+(defconst ibus-mode-version "0.1.1.19")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -1284,6 +1284,9 @@ display."
 			     '(0 . 26) '(28 . 31)))
 
 (defun ibus-update-key-bindings (&optional symbol)
+  "Update keymaps of ibus-mode according to `ibus-common-function-key-list'
+and `ibus-preedit-function-key-list'. The optional argument SYMBOL, if
+given, specifies a keymap variable to be updated."
   (when (and ibus-frame-focus
 	     (not ibus-mode-map-prev-disabled)
 	     (or (null symbol)
@@ -1363,21 +1366,29 @@ display."
     (symbol-value symbol))) ; Return value
 
 (defun ibus-define-common-key (key handle)
-  "Specify which key events IBus anytime takes over. If HANDLE
-is non-nil, IBus handles the key events given by KEY. When KEY is
-given as an array, it doesn't indicate key sequence, but multiple
-definitions of single keystroke.
- It is necessary to call a function `ibus-update-key-bindings' or
-restart ibus-mode so that this settings may become effective."
+  "Specify which key events IBus anytime takes over. If HANDLE is non-nil,
+IBus handles the key events given by KEY. Otherwise, IBus ignores that key
+events. When KEY is given as an array, it doesn't indicate key sequence,
+but multiple definitions of single keystrokes. Note that `meta' modifier
+included in KEY doesn't indicate alt keys but actual meta key.
+
+Calling this function merely modifies `ibus-common-function-key-list',
+so it doesn't take the effect to keymap immediately. To update the
+keymap, you must additionally call a function `ibus-update-key-bindings'
+or restart ibus-mode."
   (ibus-define-key 'ibus-common-function-key-list key handle))
 
 (defun ibus-define-preedit-key (key handle)
-  "Specify which key events IBus takes over when preediting. If
-HANDLE is non-nil, IBus handles the key events given by KEY. When
-KEY is given as an array, it doesn't indicate key sequence, but
-multiple definitions of single keystroke.
- It is necessary to call a function `ibus-update-key-bindings' or
-restart ibus-mode so that this settings may become effective."
+  "Specify which key events IBus takes over when preediting. If HANDLE is
+non-nil, IBus handles the key events given by KEY. Otherwise, IBus ignores
+that key events. When KEY is given as an array, it doesn't indicate key
+sequence, but multiple definitions of single keystrokes. Note that `meta'
+modifier included in KEY doesn't indicate alt keys but actual meta key.
+
+Calling this function merely modifies `ibus-preedit-function-key-list',
+so it doesn't take the effect to keymap immediately. To update the
+keymap, you must additionally call a function `ibus-update-key-bindings'
+or restart ibus-mode."
   (ibus-define-key 'ibus-preedit-function-key-list key handle))
 
 ;; Advice for `describe-key'
