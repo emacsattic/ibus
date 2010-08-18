@@ -8,7 +8,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.1.1.19")
+(defconst ibus-mode-version "0.1.1.20")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -135,7 +135,7 @@
 (defgroup ibus nil
   "Intelligent Input Bus (IBus)"
   :prefix "ibus-"
-  :group 'editing :group 'wp)
+  :group 'editing :group 'wp :group 'i18n)
 
 ;; Basic settings
 (defgroup ibus-basic nil
