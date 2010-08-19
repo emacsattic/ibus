@@ -8,7 +8,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.2.0")
+(defconst ibus-mode-version "0.2.0.1")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -437,11 +437,21 @@ the coordinates to ibus-daemon."
   (let ((dir-list `(,(file-name-directory load-file-name)
 		    "~/bin/"
 		    "/usr/local/bin/"
+		    "/usr/local/libexec/"
+		    "/usr/local/libexec/ibus-el/"
+		    "/usr/local/libexec/emacs-ibus/"
 		    "/usr/local/lib/ibus-el/"
+		    "/usr/local/lib/emacs-ibus/"
 		    "/usr/local/share/ibus-el/"
+		    "/usr/local/share/emacs-ibus/"
 		    "/usr/bin/"
+		    "/usr/libexec/"
+		    "/usr/libexec/ibus-el/"
+		    "/usr/libexec/emacs-ibus/"
 		    "/usr/lib/ibus-el/"
-		    "/usr/share/ibus-el/"))
+		    "/usr/lib/emacs-ibus/"
+		    "/usr/share/ibus-el/"
+		    "/usr/share/emacs-ibus/"))
 	file-name)
     (while dir-list
       (setq file-name (concat (pop dir-list) "ibus-el-agent"))
