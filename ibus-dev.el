@@ -8,7 +8,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.1.1.21")
+(defconst ibus-mode-version "0.2.0")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -93,6 +93,16 @@
 ;;
 
 ;;; History:
+;; 2010-08-19  S. Irie
+;;         * Version 0.2.0
+;;         * Add `i18n' to parent groups of `ibus'
+;;         * Add option `ibus-agent-start-ibus-daemon'
+;;         * Change not to start ibus-daemon automatically by default
+;;         * Change not to use xwininfo
+;;         * Change not to ask X root window the property "_NET_ACTIVE_WINDOW"
+;;         * Delete internal option `ibus-meta-key-exists'
+;;         * Bug fixes
+;;
 ;; 2010-06-11  S. Irie
 ;;         * Version 0.1.1
 ;;         * Improved performance and stability
