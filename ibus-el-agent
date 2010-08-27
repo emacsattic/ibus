@@ -6,7 +6,7 @@
 
 # Author: S. Irie
 # Maintainer: S. Irie
-# Version: 0.1.1.12
+# Version: 0.2.0.2
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -39,6 +39,15 @@
 
 # ChangeLog:
 
+# 2010-08-19  S. Irie
+#         * Version 0.2.0
+#         * Added Frame class in order to:
+#           - observe input focus
+#           - obtain frame absolute coordinates
+#         * Added -q option to quit if ibus-daemon is not running
+#         * Fixed shift modifier bug
+#         * Bug fix
+#
 # 2010-06-11  S. Irie
 #         * Version 0.1.1
 #         * Changed to reduce inter-process communication
