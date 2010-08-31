@@ -8,7 +8,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.2.0.1")
+(defconst ibus-mode-version "0.2.0.3")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -341,7 +341,7 @@ The unexpected event is, for example, string insertion by mouse clicking."
 
 (defcustom ibus-cursor-color
   nil
-  "Specify cursor color(s) corresponding to ibus' status.
+  "Specify cursor color(s) corresponding to IBus' status.
 If the value is a string, specify the cursor color applied when IBus is
 on. If a cons cell, its car and cdr are the cursor colors which indicate
 that IBus is on and off, respectively. If a list, the first, second and
@@ -482,8 +482,8 @@ directly as a shell command."
   "String specifying a name of X keysym which is used as a substitute
 of keysym corresponding to Japanese prolonged sound mark (onbiki) key. The
 value nil means don't use the substitutive keysym. ibus-mode modifies X's
-keymap according to this option in order to distinguish backslash key from
-yen-mark key. This option is ineffectual unless using jp-106 keyboard."
+keymap according to this option in order to distinguish yen-mark key from
+backslash key. This option is ineffectual unless using jp-106 keyboard."
   :set 'ibus-customize-key
   :type 'string
   :group 'ibus-expert)
