@@ -8,7 +8,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.2.0.3")
+(defconst ibus-mode-version "0.2.0.4")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -2222,22 +2222,35 @@ respectively."
    ((not ibus-string-insertion-failed)
     (ibus-remove-preedit)
     (condition-case err
-	(progn
+	(let ((simulate (and (not ibus-preediting-p)
+			     (eq this-command 'ibus-handle-event)
+			     (= (length text) 1)
+			     (eq (string-to-char text) last-command-event))))
 	  (cond
 	   ;; ansi-term
 	   ((and (eq major-mode 'term-mode)
 		 (get-buffer-process (current-buffer)))
+	    (if simulate
+		(setq this-command 'term-send-raw))
 	    (with-no-warnings
 	      (term-send-raw-string text)))
 	   ;; table-mode
 	   ((and (featurep 'table)
 		 (with-no-warnings table-mode-indicator))
-	    (ibus-*table--cell-insert text))
+	    (if simulate
+		(progn
+		  (setq this-command '*table--cell-self-insert-command)
+		  (*table--cell-self-insert-command))
+	      (ibus-*table--cell-insert text)))
 	   ;; Normal commit
 	   (ibus-undo-by-committed-string
+	    (if simulate
+		(setq this-command 'self-insert-command))
 	    (insert-and-inherit text))
 	   ;; Normal commit (Undoing will be performed every 20 characters)
 	   (t
+	    (if simulate
+		(setq this-command 'self-insert-command))
 	    (ibus-insert-and-modify-undo-list text)))
 	  (setq ibus-last-command 'self-insert-command)
 	  (run-hooks 'ibus-commit-string-hook))
@@ -2510,7 +2523,9 @@ respectively."
   (interactive "*p")
   (unless (eq last-command 'ibus-handle-event)
     (setq ibus-last-command last-command))
-  (ibus-process-key-event last-command-event))
+  (ibus-process-key-event last-command-event)
+  (if ibus-preediting-p
+      (setq this-command 'ibus-handle-event)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Manage IMContexts
