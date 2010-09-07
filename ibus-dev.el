@@ -8,7 +8,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.2.0.5")
+(defconst ibus-mode-version "0.2.0.6")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -485,7 +485,8 @@ value nil means don't use the substitutive keysym. ibus-mode modifies X's
 keymap according to this option in order to distinguish yen-mark key from
 backslash key. This option is ineffectual unless using jp-106 keyboard."
   :set 'ibus-customize-key
-  :type 'string
+  :type '(choice (string :tag "keysym name" :value "F24")
+		 (const :tag "none" nil))
   :group 'ibus-expert)
 
 (defcustom ibus-kana-onbiki-key-symbol 'f24
@@ -495,7 +496,8 @@ mark (onbiki) key. The value nil means don't use that key. If setting
 the event corresponding to that keysym. This option is ineffectual
 unless using jp-106 keyboard."
   :set 'ibus-customize-key
-  :type '(choice (symbol)
+  :type '(choice (symbol :tag "symbol" :value 'f24)
+		 (integer :tag "character code (integer)" :value ?|)
 		 (const :tag "none" nil))
   :group 'ibus-expert)
 
