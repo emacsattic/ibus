@@ -8,7 +8,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.2.0.6")
+(defconst ibus-mode-version "0.2.0.7")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -2224,35 +2224,28 @@ respectively."
    ((not ibus-string-insertion-failed)
     (ibus-remove-preedit)
     (condition-case err
-	(let ((simulate (and (not ibus-preediting-p)
-			     (eq this-command 'ibus-handle-event)
-			     (= (length text) 1)
-			     (eq (string-to-char text) last-command-event))))
+	(if (and (not ibus-preediting-p)
+		 (eq this-command 'ibus-handle-event)
+		 (= (length text) 1)
+		 (eq (string-to-char text) last-command-event))
+	    (let ((ibus-last-command-event last-command-event)
+		  ibus-agent-key-event-handled)
+	      (ibus-process-key-event-cb id nil))
 	  (cond
 	   ;; ansi-term
 	   ((and (eq major-mode 'term-mode)
 		 (get-buffer-process (current-buffer)))
-	    (if simulate
-		(setq this-command 'term-send-raw))
 	    (with-no-warnings
 	      (term-send-raw-string text)))
 	   ;; table-mode
 	   ((and (featurep 'table)
 		 (with-no-warnings table-mode-indicator))
-	    (if simulate
-		(progn
-		  (setq this-command '*table--cell-self-insert-command)
-		  (*table--cell-self-insert-command))
-	      (ibus-*table--cell-insert text)))
+	    (ibus-*table--cell-insert text))
 	   ;; Normal commit
 	   (ibus-undo-by-committed-string
-	    (if simulate
-		(setq this-command 'self-insert-command))
 	    (insert-and-inherit text))
 	   ;; Normal commit (Undoing will be performed every 20 columns)
 	   (t
-	    (if simulate
-		(setq this-command 'self-insert-command))
 	    (ibus-insert-and-modify-undo-list text)))
 	  (setq ibus-last-command 'self-insert-command)
 	  (run-hooks 'ibus-commit-string-hook))
