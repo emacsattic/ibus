@@ -8,7 +8,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.2.0.8")
+(defconst ibus-mode-version "0.2.0.9")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -2746,7 +2746,8 @@ ENGINE-NAME, if given as a string, specify input method engine."
 	    (if (numberp ibus-imcontext-id)
 		(ibus-check-frame-focus t)))
 	  (ibus-set-keymap-parent)
-	  (ibus-update-cursor-color)))
+	  (unless non-x-p
+	    (ibus-update-cursor-color))))
       (setq ibus-parent-buffer-group nil)
       ;; Disable keymap if buffer is read-only, explicitly disabled, or vi-mode.
       (if (eq (and (or buffer-read-only
