@@ -8,7 +8,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.2.0.9")
+(defconst ibus-mode-version "0.2.0.10")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -2755,6 +2755,9 @@ ENGINE-NAME, if given as a string, specify input method engine."
 		       (eq major-mode 'vi-mode)
 		       (and (boundp 'vip-current-mode)
 			    (eq vip-current-mode 'vi-mode))
+		       (and (bound-and-true-p vim-mode)
+			    (with-no-warnings
+			      (eq vim:active-mode 'vim:normal-mode)))
 		       (and (boundp 'viper-current-state)
 			    (eq viper-current-state 'vi-state)))
 		   (not (and isearch-mode
