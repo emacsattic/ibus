@@ -8,7 +8,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.2.0.10")
+(defconst ibus-mode-version "0.2.0.11")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -1744,7 +1744,8 @@ respectively."
 	  (when ibus-preediting-p
 	    (ibus-remove-preedit)
 	    (ibus-show-preedit))))
-      (unless focus-in
+      (unless (or focus-in
+		  this-command)
 	(ibus-check-current-buffer)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
