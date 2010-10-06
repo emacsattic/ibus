@@ -8,7 +8,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.2.0.11")
+(defconst ibus-mode-version "0.2.0.12")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -981,7 +981,8 @@ use either \\[customize] or the function `ibus-mode'."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun ibus-log1 (format-string args)
-  (let ((log-str (apply 'format format-string args)))
+  (let ((log-str (concat (format-time-string "%T ")
+			 (apply 'format format-string args))))
     (with-current-buffer (get-buffer-create ibus-log-buffer)
       (let ((window (get-buffer-window (current-buffer))))
 	(save-selected-window
@@ -1008,8 +1009,8 @@ use either \\[customize] or the function `ibus-mode'."
       (ibus-log1 " 4th: %S" (list (nth 3 buffer-undo-list))))))
 
 (defun ibus-message (format-string &rest args)
-  (apply 'message (concat "IBus: " format-string) args)
-  (apply 'ibus-log (concat "message: " format-string) args))
+  (apply 'ibus-log (concat "message: " format-string) args)
+  (apply 'message (concat "IBus: " format-string) args))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Miscellaneous
