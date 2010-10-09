@@ -6,7 +6,7 @@
 
 # Author: S. Irie
 # Maintainer: S. Irie
-# Version: 0.2.0.2
+# Version: 0.2.0.13
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -118,13 +118,13 @@ class Frame(object):
             try:
                 tree = focus.query_tree()
                 parent = tree.parent
-                if parent == tree.root:
+                if tree.root in (focus, parent):
                     print form % focus.id
                 else:
                     print form % parent.id
                 self.focus = focus
             except:
-                pass
+                pass # This probably makes aborting ibus-mode.
         return True
 
     def stop_focus_observation(self):
