@@ -6,7 +6,7 @@
 
 # Author: S. Irie
 # Maintainer: S. Irie
-# Version: 0.2.0.13
+# Version: 0.2.0.14
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -151,7 +151,13 @@ class Frame(object):
             self.root_window = self.window.get_geometry().root
             self.window_id = window_id
 
-display = Xlib.display.Display()
+try:
+    display = Xlib.display.Display()
+except:
+    import time
+    time.sleep(0.5)
+    display = Xlib.display.Display()
+
 frame = Frame(display)
 
 ########################################################################
