@@ -8,7 +8,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.2.0.15")
+(defconst ibus-mode-version "0.2.0.16")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -2078,11 +2078,13 @@ respectively."
 	      (sec (and (floatp ibus-agent-timeout) ibus-agent-timeout))
 	      (msec (and (integerp ibus-agent-timeout) ibus-agent-timeout)))
 	  (when (= (point-max) 1)
-	    (accept-process-output ibus-agent-process sec msec t))
+	    (save-current-buffer
+	      (accept-process-output ibus-agent-process sec msec t)))
 	  (when wait
-	    (sleep-for (or (and (floatp ibus-agent-buffering-time)
-				ibus-agent-buffering-time)
-			   (/ ibus-agent-buffering-time 1000.0))))
+	    (save-current-buffer
+	      (sleep-for (or (and (floatp ibus-agent-buffering-time)
+				  ibus-agent-buffering-time)
+			     (/ ibus-agent-buffering-time 1000.0)))))
 	  (goto-char (point-min))
 	  (while (let ((pos (point)))
 		   (condition-case err
@@ -2095,7 +2097,8 @@ respectively."
 			     repl)
 		     (end-of-file
 		      (goto-char pos)
-		      (accept-process-output ibus-agent-process sec msec t))
+		      (save-current-buffer
+			(accept-process-output ibus-agent-process sec msec t)))
 		     (error
 		      nil)))
 	    (beginning-of-line 2))
