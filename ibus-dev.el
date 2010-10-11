@@ -8,7 +8,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.2.0.12")
+(defconst ibus-mode-version "0.2.0.15")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -1672,15 +1672,17 @@ respectively."
 (defun ibus-focus-changed-cb (window-id)
   (ibus-log "frame focus changed: %s" window-id)
   (setq ibus-focused-window-id window-id)
-  (let ((frames (frame-list)))
-    (while frames
-      (let* ((frame (pop frames))
-	     (id (frame-parameter frame 'outer-window-id)))
-	(when (and id (eq (string-to-number id) window-id))
-	  (select-frame frame)
-	  (setq frames nil))))
-    (ibus-log "window-system: %s" window-system)
-    (ibus-check-frame-focus)))
+  (unless window-system
+    (let ((frames (frame-list)))
+      (while frames
+	(let* ((frame (pop frames))
+	       (id (frame-parameter frame 'outer-window-id)))
+	  (when (and id (eq (string-to-number id) window-id))
+	    (ibus-log "non-X frame => X frame")
+	    (save-current-buffer
+	      (select-frame frame))
+	    (setq frames nil))))))
+  (ibus-check-frame-focus))
 
 (defun ibus-change-x-display ()
   (let ((display (ibus-get-x-display)))
