@@ -8,7 +8,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.2.0.16")
+(defconst ibus-mode-version "0.2.0.17")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -2163,6 +2163,7 @@ respectively."
 
 (defun ibus-process-signals (sexplist &optional passive)
   (let (rsexplist
+	focus-changed
 	(need-check (and passive
 			 (null ibus-isearch-minibuffer)
 			 (buffer-live-p ibus-current-buffer)
@@ -2173,7 +2174,7 @@ respectively."
 	     (fun (car-safe sexp)))
 	(cond
 	 ((eq fun 'ibus-focus-changed-cb)
-	  (apply 'run-with-timer 0 nil sexp))
+	  (setq focus-changed sexp))
 	 ((and (symbolp fun)
 	       (fboundp fun))
 	  (push sexp rsexplist)
@@ -2190,6 +2191,8 @@ respectively."
 	 (t
 	  (ibus-log "ignore: %S" sexp)
 	  ))))
+    (if focus-changed
+	(apply 'run-with-timer 0 nil focus-changed))
     (when rsexplist
       (ibus-log "this-command: %s" this-command)
       (ibus-log "last-command: %s" last-command)
