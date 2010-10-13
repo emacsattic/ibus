@@ -8,7 +8,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.2.0.18")
+(defconst ibus-mode-version "0.2.0.19")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -1552,7 +1552,13 @@ or restart ibus-mode."
 				    ibus-current-buffer))
 			   (not ibus-mode))
 		   (unless color
-		     (setq color (frame-parameter nil 'foreground-color)))
+		     (let ((spec (or (get 'cursor 'customized-face)
+				     (cadr (assq (car custom-enabled-themes)
+						 (get 'cursor 'theme-face))))))
+		       (setq color (if spec
+				       (cadr (memq :background
+						   (face-spec-choose spec)))
+				     (frame-parameter nil 'foreground-color)))))
 		   (if viper
 		       (with-no-warnings
 			 (setq viper-insert-state-cursor-color color)
