@@ -8,7 +8,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.2.0.17")
+(defconst ibus-mode-version "0.2.0.18")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -1543,7 +1543,7 @@ or restart ibus-mode."
 	(orig-frame (selected-frame)))
     (ibus-log "set cursor color: %S" color)
     (condition-case err
-	(while (progn
+	(while (save-current-buffer
 		 (unless single-frame
 		   (select-frame (next-frame nil t)))
 		 (when (or (and (eq window-system 'x)
