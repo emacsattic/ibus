@@ -8,7 +8,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.2.0.19")
+(defconst ibus-mode-version "0.2.0.20")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -2031,7 +2031,7 @@ respectively."
 	(set-process-coding-system proc 'utf-8 'utf-8)
 	(with-current-buffer (process-buffer proc)
 	  (ibus-log "temp buffer: %S" (current-buffer))
-	  (unless ibus-debug (buffer-disable-undo))
+	  (buffer-disable-undo)
 	  (erase-buffer)
 	  ;; `make-local-hook' is an obsolete function (as of Emacs 21.1)
 ;	  (make-local-hook 'after-change-functions)
