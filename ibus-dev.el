@@ -8,7 +8,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.2.0.20")
+(defconst ibus-mode-version "0.2.1")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -93,6 +93,11 @@
 ;;
 
 ;;; History:
+;; 2010-11-03  S. Irie
+;;         * Version 0.2.1
+;;         * Add support for vim-mode
+;;         * Bug fixes
+;;
 ;; 2010-08-19  S. Irie
 ;;         * Version 0.2.0
 ;;         * Add `i18n' to parent groups of `ibus'

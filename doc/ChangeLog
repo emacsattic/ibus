@@ -1,3 +1,4 @@
+2010-11-03  IRIE Shinsuke <irieshinsuke@yahoo.co.jp>
 	* Version0.2.1
 	* Added support for vim-mode
 	* Added libexec directories to search paths for `ibus-agent-file-name'
