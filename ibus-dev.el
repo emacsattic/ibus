@@ -1926,7 +1926,7 @@ respectively."
 			       pr 50
 			       highlight t))
 			((and (eq type 'underline)
-			      (> value 0))
+			      (>= value 0))
 			 (setq fc (list :underline t)
 			       pr 100)))
 		  (let ((ol (make-overlay (+ ibus-preedit-point beg)
