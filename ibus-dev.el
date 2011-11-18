@@ -1772,7 +1772,9 @@ respectively."
 (defun ibus-remove-preedit (&optional abort)
   (remove-hook 'before-change-functions 'ibus-before-change-function)
   (unless (or (string= ibus-preedit-prev-text "")
-	      abort)
+	      (and abort
+		   (not (and (featurep 'table)
+			     (with-no-warnings table-mode-indicator)))))
     (let ((pos ibus-preedit-point)
 	  (inhibit-read-only t)
 	  (inhibit-modification-hooks t))
@@ -1803,10 +1805,13 @@ respectively."
 		(delete-region pos (+ pos (length ibus-preedit-prev-text)))))
 	    (undo-boundary)
 	    (goto-char pos)
-	    ;; Invoke function bound to `point-entered' text property
-	    (let ((func (get-text-property pos 'point-entered)))
-	      (when func
-		(funcall func))))
+	    (if abort
+		;; Aborting preedit in table cell
+		(ibus-*table--cell-insert ibus-preedit-prev-text)
+	      ;; Invoke function bound to `point-entered' text property
+	      (let ((func (get-text-property pos 'point-entered)))
+		(when func
+		  (funcall func)))))
 	(error
 	 (ibus-message "Failed to delete preediting text %S" err)))))
   (mapc 'delete-overlay ibus-preedit-overlays)
