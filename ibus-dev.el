@@ -891,6 +891,9 @@ use either \\[customize] or the function `ibus-mode'."
   :group 'ibus
   :require 'ibus)
 
+;; Server information
+(defvar ibus-version "0")
+
 ;; Hook variables
 (defvar ibus-set-commit-string-hook nil)
 (defvar ibus-commit-string-hook nil)
@@ -1646,7 +1649,8 @@ respectively."
     (let ((rect (ibus-compute-pixel-position
 		 (if (and prediction
 			  (eq ibus-prediction-window-position 0)
-			  (not (minibufferp)))
+			  (or (not (minibufferp))
+			      (version<= "1.3.8" ibus-version)))
 		     ibus-preedit-point
 		   (+ ibus-preedit-point ibus-preedit-curpos)))))
       (ibus-log "cursor position (x y h): %s" rect)

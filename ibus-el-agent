@@ -483,6 +483,7 @@ class IBusModeMainLoop(glib.MainLoop):
         exit()
 
     def __start_cb(self):
+        print '(setq ibus-version "%s")'%ibus.get_version()
         print '(setq started t)'
         print 'Agent successfully started for display "%s"'% \
             display.get_display_name()
