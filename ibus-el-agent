@@ -366,6 +366,10 @@ def process_key_event(id_no, keyval, modmask, backslash, pressed = None):
                                (display.display.info.max_keycode
                                 - display.display.info.min_keycode + 1))
 
+    def reply(id_no, handled):
+        print '(ibus-process-key-event-cb %d %s)'%(id_no, lisp_boolean(handled))
+        return False
+
     ic = imcontexts[id_no]
     if use_surrounding_text and pressed != False \
             and ic.needs_surrounding_text() and not ic.surrouding_text_received:
@@ -411,7 +415,7 @@ def process_key_event(id_no, keyval, modmask, backslash, pressed = None):
         handled_r = ic.process_key_event(keyval, keycode,
                                          modmask | modifier.RELEASE_MASK)
         handled = handled_p or handled_r
-    print '(ibus-process-key-event-cb %d %s)'%(id_no, lisp_boolean(handled))
+    glib.idle_add(reply, id_no, handled)
 
 def set_cursor_location(id_no, x, y, w, h):
     imcontexts[id_no].set_cursor_location(frame.left + x, frame.top + y, w, h)
