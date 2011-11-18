@@ -2011,10 +2011,11 @@ respectively."
 		   (string-match "\\(\\**\\)$" ibus-agent-buffer-name)
 		   (replace-match (concat "(" display ")\\1")
 				  t nil ibus-agent-buffer-name)))
-	 (args (unless (if (functionp ibus-agent-start-ibus-daemon)
-			   (funcall ibus-agent-start-ibus-daemon)
-			 ibus-agent-start-ibus-daemon)
-		 '("-q"))))
+	 (args '("-s"))) ; Enable surrounding text support
+    (unless (if (functionp ibus-agent-start-ibus-daemon)
+		(funcall ibus-agent-start-ibus-daemon)
+	      ibus-agent-start-ibus-daemon)
+      (push "-q" args)) ; Quit if ibus-daemon is not running
     (if ibus-python-shell-command-name
 	(apply 'start-process "ibus-agent" buffer ibus-python-shell-command-name
 	       (expand-file-name ibus-agent-file-name) args)
@@ -2375,16 +2376,83 @@ respectively."
 	(ibus-agent-send-key-event keyval modmask nil pressed)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Surrounding text
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun ibus-get-surrounding-text ()
+    (save-excursion
+      (if ibus-preediting-p
+	  (goto-char ibus-preedit-point))
+      (let ((beg (line-beginning-position))
+	    (end (line-end-position))
+	    (len (length ibus-preedit-prev-text))
+	    str)
+	(cons (concat (buffer-substring-no-properties beg (point))
+		      (buffer-substring-no-properties (+ (point) len) end))
+	      (- (point) beg)))))
+
+(defun ibus-get-anchor-position ()
+  (- (cond (ibus-preediting-p
+	    ibus-preedit-point)
+	   ((or (not mark-active)
+		(< (mark) (line-beginning-position))
+		(> (mark) (line-end-position)))
+	    (point))
+	   (t
+	    (mark)))
+     (line-beginning-position)))
+
+(defun ibus-escape-string (str)
+  (let* ((tmp (append str nil))
+	 cur
+	 (next tmp))
+    (while (setq cur (memq ?\" next))
+      (setq next (cdr cur))
+      (setcar cur ?\\)
+      (setcdr cur (cons ?\" next)))
+    (while (setq cur (memq ?\\ next))
+      (setq next (cdr cur))
+      (setcdr cur (cons ?\\ next)))
+    (setq next tmp)
+    (concat tmp)))
+
+(defun ibus-set-surrounding-text ()
+  (let ((surrounding-text (ibus-get-surrounding-text)))
+  (ibus-agent-send "set_surrounding_text(%d, \"%s\", %d, %d)"
+		   ibus-imcontext-id
+		   (ibus-escape-string (car surrounding-text))
+		   (cdr surrounding-text)
+		   (ibus-get-anchor-position))))
+
+(defun ibus-query-surrounding-text-cb (id keyval modmask backslash pressed)
+  (if (not (eq id ibus-imcontext-id))
+      (ibus-message "IMContext ID (%s) is mismatched." id)
+    (setq ibus-imcontext-status (propertize ibus-imcontext-status
+					    'needs-surrouding-text t))
+    (setcdr (assoc ibus-selected-display
+		   (nth 2 (assq ibus-buffer-group ibus-buffer-group-alist)))
+	    ibus-imcontext-status)
+    (and (ibus-set-surrounding-text)
+	 (ibus-agent-send "process_key_event(%d, %d, 0x%x, %s, %s)"
+			  id keyval modmask backslash pressed))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Process key events
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun ibus-agent-send-key-event (keyval modmask backslash pressed)
-  (when (ibus-agent-send "process_key_event(%d, %d, 0x%x, %s, %s)"
-			 ibus-imcontext-id keyval modmask
-			 (or backslash "None")
-			 (nth (or (and (numberp pressed) pressed)
-				  (if pressed 1 0))
-			      '("False" "True" "None")))
+  (when (and (or (not pressed)
+		 (eq pressed 0)
+		 (null ibus-imcontext-status)
+		 (not (get-text-property 0 'needs-surrouding-text
+					 ibus-imcontext-status))
+		 (ibus-set-surrounding-text))
+	     (ibus-agent-send "process_key_event(%d, %d, 0x%x, %s, %s)"
+			      ibus-imcontext-id keyval modmask
+			      (or backslash "None")
+			      (nth (or (and (numberp pressed) pressed)
+				       (if pressed 1 0))
+				   '("False" "True" "None"))))
     (let ((time-limit (+ (float-time)
 			 (or (and (floatp ibus-agent-timeout)
 				  ibus-agent-timeout)
@@ -2628,7 +2696,8 @@ ENGINE-NAME, if given as a string, specify input method engine."
   (when (and (processp ibus-agent-process)
 	     (numberp ibus-imcontext-id))
     (if engine-name
-	(ibus-agent-send "set_engine(%d, %S)" ibus-imcontext-id engine-name)
+	(ibus-agent-send "set_engine(%d, %S)" ibus-imcontext-id
+			 (substring-no-properties engine-name))
       (ibus-agent-send "enable(%d)" ibus-imcontext-id))
     (ibus-agent-receive nil t)))
 

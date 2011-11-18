@@ -82,6 +82,7 @@ from ibus import modifier
 ########################################################################
 
 start_ibus_daemon = True
+use_surrounding_text = False
 
 if __name__ == "__main__":
 
@@ -90,9 +91,15 @@ if __name__ == "__main__":
     parser.add_option("-q", "--quit",
                       action="store_true", dest="quit", default=False,
                       help="quit if ibus-daemon is not running")
+    parser.add_option("-s", "--surrounding-text",
+                      action="store_true", dest="surrounding_text", default=True,
+                      help="enable surrounding text support")
     options, args = parser.parse_args()
     if options.quit:
         start_ibus_daemon = False
+    if options.surrounding_text:
+        use_surrounding_text = True
+        print "Surrounding text support enabled"
 
 ########################################################################
 # Setup Xlib
@@ -218,6 +225,7 @@ class IBusELInputContext(ibus.InputContext):
         self.id_no = 0
         self.preediting = False
         self.lookup_table = None
+        self.surrouding_text_received = False
 
         self.connect('commit-text', commit_text_cb)
         self.connect('update-preedit-text', update_preedit_text_cb)
@@ -313,9 +321,11 @@ def cursor_down_lookup_table_cb(ic):
 
 def enabled_cb(ic):
     print '(ibus-status-changed-cb %d "%s")'%(ic.id_no, ic.get_engine().name)
+    ic.surrouding_text_received = False
 
 def disabled_cb(ic):
     print '(ibus-status-changed-cb %d nil)'%ic.id_no
+    ic.surrouding_text_received = False
 
 def forward_key_event_cb(ic, keyval, keycode, modifiers):
     print '(ibus-forward-key-event-cb %d %d %d %s)'% \
@@ -340,7 +350,7 @@ def create_imcontext():
     except ValueError:
         ic.id_no = len(imcontexts)
         imcontexts.append(ic)
-    ic.set_capabilities(int('101001',2))
+    ic.set_capabilities(int('101001' if use_surrounding_text else '001001',2))
     print '(ibus-create-imcontext-cb %d)'%ic.id_no
 
 def destroy_imcontext(id_no):
@@ -355,6 +365,13 @@ def process_key_event(id_no, keyval, modmask, backslash, pressed = None):
         display._update_keymap(display.display.info.min_keycode,
                                (display.display.info.max_keycode
                                 - display.display.info.min_keycode + 1))
+
+    ic = imcontexts[id_no]
+    if use_surrounding_text and pressed != False \
+            and ic.needs_surrounding_text() and not ic.surrouding_text_received:
+        print '(ibus-query-surrounding-text-cb %d %d ?\\x%x "%s" "%s")'% \
+            (id_no, keyval, modmask, backslash, pressed)
+        return
 
     if backslash:
         keycode = display.keysym_to_keycode(backslash) - 8
@@ -388,9 +405,8 @@ def process_key_event(id_no, keyval, modmask, backslash, pressed = None):
     if pressed != None:
         if not pressed:
             modmask |= modifier.RELEASE_MASK
-        handled = imcontexts[id_no].process_key_event(keyval, keycode, modmask)
+        handled = ic.process_key_event(keyval, keycode, modmask)
     else:
-        ic = imcontexts[id_no]
         handled_p = ic.process_key_event(keyval, keycode, modmask)
         handled_r = ic.process_key_event(keyval, keycode,
                                          modmask | modifier.RELEASE_MASK)
@@ -423,6 +439,11 @@ def set_engine(id_no, name):
             break
     else:
         enable(id_no)
+
+def set_surrounding_text(id_no, text, cursor_pos, anchor_pos):
+    ic = imcontexts[id_no]
+    ic.set_surrounding_text(text.decode("utf-8"), cursor_pos, anchor_pos)
+    ic.surrouding_text_received = True
 
 def update_frame_coordinates(window_id = None):
     if window_id:
