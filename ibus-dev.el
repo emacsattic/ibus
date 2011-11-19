@@ -439,14 +439,14 @@ methods such as ibus-mozc."
 
 (defcustom ibus-prediction-window-position
   0
-  "Specify position showing a prediction window of some input methods
-such as ibus-mozc. A value of t means show it under cursor. An integer
-0 means under the start point of preediting area. If you won't use
-prediction window at all, you can set nil in order not to send data of
-the coordinates to ibus-daemon."
+  "Specify position showing a prediction window used by some input
+methods such as ibus-mozc. A value of t means show it just under cursor.
+An integer 0 means just under the start point of preediting area. If you
+won't use prediction window at all, you can set nil in order not to send
+data of the coordinates to ibus-daemon."
   :type '(choice (const :tag "Don't use prediction" nil)
 		 (const :tag "Head of preediting area" 0)
-		 (const :tag "Below cursor" t))
+		 (const :tag "Just under cursor" t))
   :group 'ibus-appearance)
 
 ;; Advanced settings
