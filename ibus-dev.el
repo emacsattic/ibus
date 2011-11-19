@@ -421,6 +421,22 @@ showing conversion candidates."
   :type 'boolean
   :group 'ibus-appearance)
 
+(defcustom ibus-candidate-window-h-offset
+  0
+  "Specify horizontal offset of candidate window (in pixels)."
+  :type 'integer
+  :group 'ibus-appearance)
+
+(defcustom ibus-prediction-window-h-offset
+  nil
+  "Specify horizontal offset of prediction window (in pixels or nil).
+The value nil means use same offset as `ibus-candidate-window-h-offset'.
+Prediction window is used for suggesting words or sentence by some input
+methods such as ibus-mozc."
+  :type '(choice (integer :tag "horizontal offset" 0)
+		 (const :tag "same as candidate window" nil))
+  :group 'ibus-appearance)
+
 (defcustom ibus-prediction-window-position
   0
   "Specify position showing a prediction window of some input methods
@@ -1653,6 +1669,10 @@ respectively."
 			      (version<= "1.3.8" ibus-version)))
 		     ibus-preedit-point
 		   (+ ibus-preedit-point ibus-preedit-curpos)))))
+      (setcar rect (+ (car rect)
+		      (or (and prediction
+			       ibus-prediction-window-h-offset)
+			  ibus-candidate-window-h-offset)))
       (ibus-log "cursor position (x y h): %s" rect)
       (unless (equal rect ibus-cursor-prev-location)
 	(setq ibus-cursor-prev-location rect)

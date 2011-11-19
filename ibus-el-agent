@@ -418,7 +418,8 @@ def process_key_event(id_no, keyval, modmask, backslash, pressed = None):
     glib.idle_add(reply, id_no, handled)
 
 def set_cursor_location(id_no, x, y, w, h):
-    imcontexts[id_no].set_cursor_location(frame.left + x, frame.top + y, w, h)
+    imcontexts[id_no].set_cursor_location(max(0, frame.left + x),
+                                          frame.top + y, w, h)
 
 def focus_in(id_no):
     imcontexts[id_no].focus_in()
