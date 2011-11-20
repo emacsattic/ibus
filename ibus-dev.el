@@ -2719,7 +2719,7 @@ respectively."
 
 (defun ibus-enable (&optional engine-name)
   "Enable IBus input method.
-ENGINE-NAME, if given as a string, specify input method engine."
+ENGINE-NAME, if given as a string, specifies input method engine."
   (interactive)
   (when (and (interactive-p)
 	     (null ibus-current-buffer))
