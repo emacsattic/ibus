@@ -909,6 +909,8 @@ use either \\[customize] or the function `ibus-mode'."
 
 ;; Server information
 (defvar ibus-version "0")
+(defvar ibus-active-engine-list nil)
+(defvar ibus-engine-history nil)
 
 ;; Hook variables
 (defvar ibus-set-commit-string-hook nil)
@@ -2769,6 +2771,40 @@ ENGINE-NAME, if given as a string, specify input method engine."
   (if ibus-imcontext-status
       (ibus-disable)
     (ibus-enable)))
+
+(defun ibus-get-active-engine-list ()
+  "Return a list of strings which represent available engines of IBus
+input method. These strings can be used as an argument of `ibus-enable'
+or `ibus-enable-specified-engine' command. Return nil if failed to get
+the active engines. The latest result of this function is stored in a
+variable `ibus-active-engine-list'."
+  (setq ibus-active-engine-list nil)
+  (if ibus-current-buffer
+      (ibus-agent-send-receive "list_active_engines()")
+    (let ((ibus-current-buffer (current-buffer)))
+      (ibus-agent-send-receive "list_active_engines()")))
+  ibus-active-engine-list)
+
+(defun ibus-list-active-engines-cb (engines)
+  (ibus-log "active engines: %S" engines)
+  (setq ibus-active-engine-list engines))
+
+(defun ibus-enable-specified-engine (&optional engine-name)
+  "Select an IBus engine and turn it on in interactive search.
+ENGINE-NAME, if given as a string, specifies input method engine."
+  (interactive)
+  (when (and (null engine-name)
+	     (processp ibus-agent-process))
+    (let ((completion-ignore-case nil)
+	  (engines (ibus-get-active-engine-list))
+	  (default (car ibus-engine-history)))
+      (setq engine-name (completing-read (if default
+					     (format "IBus engine (%s): " default)
+					   "IBus engine: ")
+					 engines nil engines nil
+					 'ibus-engine-history default)))
+    (ibus-check-current-buffer))
+  (ibus-enable engine-name))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Manage buffer switching

@@ -461,13 +461,9 @@ def start_focus_observation(interval):
 def stop_focus_observation():
     frame.stop_focus_observation()
 
-########################################################################
-# Experiment
-########################################################################
-
 def list_active_engines():
-    print '(ibus-log "active engines: %s")'% \
-        ' '.join('%s'%i.name for i in bus.list_active_engines())
+    print "(ibus-list-active-engines-cb '(%s))"% \
+        ' '.join('"%s"'%i.name for i in bus.list_active_engines())
 
 ########################################################################
 # Main loop
