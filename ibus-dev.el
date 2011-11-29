@@ -46,7 +46,7 @@
 ;;
 ;; Requirements:
 ;;
-;;  * GNU Emacs 22 or 23
+;;  * GNU Emacs 22 or later
 ;;  * IBus (Version 1.2.0 or later)
 ;;  * python-xlib
 ;;
