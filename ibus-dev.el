@@ -2,7 +2,7 @@
 
 ;;; ibus.el -- IBus client for GNU Emacs
 
-;; Copyright (C) 2010 S. Irie
+;; Copyright (C) 2010-2011 S. Irie
 
 ;; Author: S. Irie
 ;; Maintainer: S. Irie
