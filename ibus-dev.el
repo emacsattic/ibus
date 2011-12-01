@@ -2401,9 +2401,18 @@ respectively."
   (let ((event (ibus-encode-event keyval modmask)))
     (if event
 	(if pressed
-	    (setq unread-command-events (cons event unread-command-events)))
+	    (if (and mark-active
+		     (eq event 'backspace)
+		     ibus-imcontext-status
+		     (let ((case-fold-search nil))
+		       (string-match "^mozc\\(-[a-z]+\\)?$" ibus-imcontext-status)))
+		;; workaround for mozc's reconversion
+		(let ((anchor (- (mark) (point))))
+		  (ibus-delete-surrounding-text-cb id (min 0 anchor) (abs anchor)))
+	      (setq unread-command-events (cons event unread-command-events))))
       (if (not (eq id ibus-imcontext-id))
 	  (ibus-message "IMContext ID (%s) is mismatched." id)
+	(setq ibus-last-command-event event)
 	(ibus-agent-send-key-event keyval modmask nil pressed)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
