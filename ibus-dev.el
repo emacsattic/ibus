@@ -2808,7 +2808,8 @@ ENGINE-NAME, if given as a string, specifies input method engine."
 	  (engines (ibus-get-active-engine-list))
 	  (default (car ibus-engine-history)))
       (setq engine-name (completing-read (if default
-					     (format "IBus engine (%s): " default)
+					     (format "IBus engine (default %s): "
+						     default)
 					   "IBus engine: ")
 					 engines nil engines nil
 					 'ibus-engine-history default)))
