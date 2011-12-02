@@ -3270,6 +3270,7 @@ ENGINE-NAME, if given as a string, specifies input method engine."
 	  (ibus-agent-kill))
 	ibus-agent-process-alist)
   (setq ibus-agent-process-alist nil)
+  (setq ibus-version "0")
   (setq-default ibus-mode nil)
   (ibus-cleanup-variables)
   (ibus-set-cursor-color)
