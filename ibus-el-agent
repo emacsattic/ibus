@@ -126,16 +126,10 @@ class Frame(object):
     def __update_focus_cb(self, form):
         focus = self.display.get_input_focus().focus
         if focus != self.focus:
-            try:
-                tree = focus.query_tree()
-                parent = tree.parent
-                if tree.root in (focus, parent):
-                    print form % focus.id
-                else:
-                    print form % parent.id
-                self.focus = focus
-            except:
-                pass # This probably makes aborting ibus-mode.
+            self.focus = focus
+            if not (focus.get_wm_class() or focus.get_wm_name()):
+                focus = focus.query_tree().parent
+            print form % focus.id
         return True
 
     def stop_focus_observation(self):
