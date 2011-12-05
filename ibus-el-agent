@@ -127,9 +127,13 @@ class Frame(object):
         focus = self.display.get_input_focus().focus
         if focus != self.focus:
             self.focus = focus
-            if not (focus.get_wm_class() or focus.get_wm_name()):
-                focus = focus.query_tree().parent
-            print form % focus.id
+            try:
+                if not (focus.get_wm_class() or focus.get_wm_name()):
+                    focus = focus.query_tree().parent
+                print form % focus.id
+            except AttributeError:
+                # 'focus' may be an integer 0 when X session is going to logout
+                pass
         return True
 
     def stop_focus_observation(self):
