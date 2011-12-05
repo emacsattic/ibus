@@ -2304,10 +2304,14 @@ respectively."
 	    (ibus-*table--cell-insert text))
 	   ;; Normal commit
 	   (ibus-undo-by-committed-string
-	    (insert-and-inherit text))
+	    (insert-and-inherit text)
+	    (if auto-fill-function
+		(funcall auto-fill-function)))
 	   ;; Normal commit (Undoing will be performed every 20 columns)
 	   (t
-	    (ibus-insert-and-modify-undo-list text)))
+	    (ibus-insert-and-modify-undo-list text)
+	    (if auto-fill-function
+		(funcall auto-fill-function))))
 	  (setq ibus-last-command 'self-insert-command)
 	  (run-hooks 'ibus-commit-string-hook))
       (text-read-only
@@ -2559,7 +2563,10 @@ respectively."
 	      (unwind-protect
 		  (if (and (eq keybind 'self-insert-command)
 			   (eq ibus-last-command 'self-insert-command))
-		      (ibus-insert-and-modify-undo-list (char-to-string event))
+		      (progn
+			(ibus-insert-and-modify-undo-list (char-to-string event))
+			(if auto-fill-function
+			    (funcall auto-fill-function)))
 		    (command-execute keybind)
 		    (if (eq keybind '*table--cell-self-insert-command)
 			(with-no-warnings
