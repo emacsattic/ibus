@@ -131,8 +131,9 @@ class Frame(object):
                 if not (focus.get_wm_class() or focus.get_wm_name()):
                     focus = focus.query_tree().parent
                 print form % focus.id
-            except AttributeError:
-                # 'focus' may be an integer 0 when X session is going to logout
+            except (AttributeError, Xlib.error.BadWindow):
+                # 'focus' may be an integer 0 when X session is going to logout,
+                # or it might be an bad window when using GNOME Shell.
                 pass
         return True
 
