@@ -107,6 +107,8 @@ if __name__ == "__main__":
 
 try:
     import Xlib.display
+    import Xlib.X
+    import Xlib.Xatom
 except ImportError:
     print "python-xlib library is required"
     exit(1)
@@ -123,18 +125,58 @@ class Frame(object):
         self.focus = None
         self.focus_cb_id = None
 
-    def __update_focus_cb(self, form):
+    def __update_focus_cb(self, form, sync=False):
+        # Check FocusIn/FocusOut events
+        if self.focus:
+            focus_in = None
+            focus_out = None
+            for i in range(display.pending_events()):
+                event = display.next_event()
+                if event.type == Xlib.X.FocusIn:
+                    focus_in = event.window
+                elif event.type == Xlib.X.FocusOut:
+                    focus_out = event.window
+            if focus_in == self.focus:
+                if focus_out != self.focus:
+                    # This is ugly workaround, but necessary to avoid a
+                    # problem that the language bar doesn't appear after
+                    # moving to other workspace in Ubuntu Unity desktop.
+                    print "(and ibus-frame-focus", \
+                               "(numberp ibus-imcontext-id)", \
+                               "(ibus-change-focus nil)", \
+                               "(ibus-change-focus t))"
+                if sync:
+                    print form % focus_in.id
+                return True
+        # Main part
         focus = self.display.get_input_focus().focus
-        if focus != self.focus:
-            self.focus = focus
-            try:
+        try:
+            # get_input_focus() may return an integer 0 that query_tree()
+            # causes AttributeError when X session is going to logout,
+            # or it might return an bad window when using GNOME Shell.
+            tree = focus.query_tree()
+            # In Ubuntu's Unity desktop, get_input_focus() often returns root
+            # window incorrectly after changing workspace.
+            if focus != tree.root:
                 if not (focus.get_wm_class() or focus.get_wm_name()):
-                    focus = focus.query_tree().parent
-                print form % focus.id
-            except (AttributeError, Xlib.error.BadWindow):
-                # 'focus' may be an integer 0 when X session is going to logout,
-                # or it might be an bad window when using GNOME Shell.
-                pass
+                    focus = tree.parent
+                if focus != self.focus or sync:
+                    print form % focus.id
+                    focus.change_attributes(event_mask=Xlib.X.FocusChangeMask)
+                    self.focus = focus
+                return True
+        except (AttributeError, Xlib.error.BadWindow):
+            if sync:
+                print form % 0
+            return True
+        # Fallback
+        atom = display.get_atom("_NET_ACTIVE_WINDOW", True)
+        focus_id = tree.root.get_property(atom, Xlib.Xatom.WINDOW, 0, 1).value[0]
+        focus = display.create_resource_object("window", focus_id)
+        if focus != self.focus or sync:
+            print form % focus_id
+            focus.change_attributes(event_mask=Xlib.X.FocusChangeMask)
+            self.focus = focus
         return True
 
     def stop_focus_observation(self):
@@ -145,7 +187,7 @@ class Frame(object):
 
     def start_focus_observation(self, interval):
         self.stop_focus_observation()
-        self.__update_focus_cb("(ibus-start-focus-observation-cb %d)")
+        self.__update_focus_cb("(ibus-start-focus-observation-cb %d)", True)
         self.focus_cb_id = glib.timeout_add(interval, self.__update_focus_cb,
                                             "(ibus-focus-changed-cb %d)")
 
