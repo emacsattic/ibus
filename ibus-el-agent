@@ -141,10 +141,10 @@ class Frame(object):
                     # This is ugly workaround, but necessary to avoid a
                     # problem that the language bar doesn't appear after
                     # moving to other workspace in Ubuntu Unity desktop.
-                    print "(and ibus-frame-focus", \
-                               "(numberp ibus-imcontext-id)", \
-                               "(ibus-change-focus nil)", \
-                               "(ibus-change-focus t))"
+                    # If old version of ibus.el which doesn't define
+                    # `ibus-redo-focus-in-cb' is running on Emacs, the
+                    # following message will just be ignored and take no effect.
+                    print '(ibus-redo-focus-in-cb)'
                 if sync:
                     print form % focus_in.id
                 return True

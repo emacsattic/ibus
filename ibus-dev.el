@@ -1721,6 +1721,12 @@ respectively."
 	    (setq frames nil))))))
   (ibus-check-frame-focus))
 
+(defun ibus-redo-focus-in-cb ()
+  (and ibus-frame-focus
+       (numberp ibus-imcontext-id)
+       (ibus-change-focus nil)
+       (ibus-change-focus t)))
+
 (defun ibus-change-x-display ()
   (let ((display (ibus-get-x-display)))
     (ibus-log "change display from %s to %s" ibus-selected-display display)
