@@ -1,3 +1,5 @@
+2011-12-24  IRIE Shinsuke <irieshinsuke@yahoo.co.jp>
+	* Version0.3.0
 	* Added support for surrounding text
 	* Added option `ibus-candidate-window-h-offset'
 	* Added option `ibus-prediction-window-h-offset'

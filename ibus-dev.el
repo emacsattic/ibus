@@ -8,7 +8,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.2.1")
+(defconst ibus-mode-version "0.3.0")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -93,6 +93,15 @@
 ;;
 
 ;;; History:
+;; 2011-12-24  S. Irie
+;;         * Version 0.3.0
+;;         * Update for IBus 1.4.0
+;;         * Add support for surrounding text
+;;         * Add option `ibus-candidate-window-h-offset'
+;;         * Add option `ibus-prediction-window-h-offset'
+;;         * Add command `ibus-enable-specified-engine'
+;;         * Bug fixes
+;;
 ;; 2010-11-03  S. Irie
 ;;         * Version 0.2.1
 ;;         * Add support for vim-mode
