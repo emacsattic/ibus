@@ -2578,10 +2578,15 @@ respectively."
 	      (unwind-protect
 		  (if (and (eq keybind 'self-insert-command)
 			   (eq ibus-last-command 'self-insert-command))
-		      (progn
-			(ibus-insert-and-modify-undo-list (char-to-string event))
-			(if auto-fill-function
-			    (funcall auto-fill-function)))
+		      (let ((len (prefix-numeric-value current-prefix-arg)))
+			(when (> len 0)
+			  (ibus-insert-and-modify-undo-list (make-string len event))
+			  (if auto-fill-function
+			      (funcall auto-fill-function))))
+		    (if current-prefix-arg
+			(setq prefix-arg current-prefix-arg
+			      universal-argument-num-events (length
+							     (this-command-keys))))
 		    (command-execute keybind)
 		    (if (eq keybind '*table--cell-self-insert-command)
 			(with-no-warnings
@@ -2595,6 +2600,9 @@ respectively."
 		this-command ibus-last-command
 		unread-command-events
 		(cons ibus-last-command-event unread-command-events))
+	  (if current-prefix-arg
+	      (setq prefix-arg current-prefix-arg
+		    universal-argument-num-events (length (this-command-keys))))
 	  (remove-hook 'post-command-hook 'ibus-check-current-buffer)
 	  (add-hook 'pre-command-hook 'ibus-fallback-pre-function)))))
   (setq ibus-last-rejected-event ibus-last-command-event
@@ -2625,7 +2633,7 @@ respectively."
 	  (ibus-process-key-event event))))
     (ibus-agent-send-key-event keyval modmask backslash nil)))
 
-(defun ibus-process-key-event (event)
+(defun ibus-process-key-event (event &optional arg)
   (let* ((decoded (ibus-decode-event event))
 	 (keyval (pop decoded))
 	 (modmask (pop decoded))
@@ -2642,7 +2650,10 @@ respectively."
       (ibus-log "event: --> %s" event)
       (unless (eq (key-binding (vector event)) 'ibus-handle-event)
 	(setq keyval nil
-	      unread-command-events (cons event unread-command-events))))
+	      unread-command-events (cons event unread-command-events))
+	(if arg
+	    (setq prefix-arg arg
+		  universal-argument-num-events (length (this-command-keys))))))
     (when keyval
       (setq ibus-last-command-event event
 	    ibus-surrounding-text-modified nil)
@@ -2674,10 +2685,10 @@ respectively."
 	(ibus-mode-off)))))
 
 (defun ibus-handle-event (&optional arg)
-  (interactive "*p")
+  (interactive "P")
   (unless (eq last-command 'ibus-handle-event)
     (setq ibus-last-command last-command))
-  (ibus-process-key-event last-command-event)
+  (ibus-process-key-event last-command-event arg)
   (if ibus-preediting-p
       (setq this-command 'ibus-handle-event)))
 
