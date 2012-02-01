@@ -2564,9 +2564,8 @@ respectively."
 			  (single-key-description ibus-last-command-event))
 	    (if isearch-mode
 		(isearch-done)))
-	(if (memq keybind '(self-insert-command
-			    *table--cell-self-insert-command))
-	    ;; Self-insert command
+	(if (commandp keybind)
+	    ;; Fall back to Emacs command bound to single event sequence
 	    (progn
 	      (ibus-do-update-preedit)
 	      (ibus-log "execute command: %s" keybind)
@@ -2578,11 +2577,13 @@ respectively."
 	      (unwind-protect
 		  (if (and (eq keybind 'self-insert-command)
 			   (eq ibus-last-command 'self-insert-command))
+		      ;; Simulate successive self-insert-command
 		      (let ((len (prefix-numeric-value current-prefix-arg)))
 			(when (> len 0)
 			  (ibus-insert-and-modify-undo-list (make-string len event))
 			  (if auto-fill-function
 			      (funcall auto-fill-function))))
+		    ;; Otherwise, execute normally
 		    (if current-prefix-arg
 			(setq prefix-arg current-prefix-arg
 			      universal-argument-num-events (length
@@ -2592,7 +2593,8 @@ respectively."
 			(with-no-warnings
 			  (table--finish-delayed-tasks))))
 		(setq ibus-last-rejected-event nil)))
-	  ;; The other commands
+	  ;; If partial key sequence, enqueue the prefix event and disable keymap
+	  ;; temporarily in order not to handle it again.
 	  (ibus-log "event rejected: %s" ibus-last-command-event)
 	  (if ibus-keymap-overlay
 	      (overlay-put ibus-keymap-overlay 'keymap nil))
