@@ -2605,6 +2605,7 @@ respectively."
 	  (if current-prefix-arg
 	      (setq prefix-arg current-prefix-arg
 		    universal-argument-num-events (length (this-command-keys))))
+	  (reset-this-command-lengths)
 	  (remove-hook 'post-command-hook 'ibus-check-current-buffer)
 	  (add-hook 'pre-command-hook 'ibus-fallback-pre-function)))))
   (setq ibus-last-rejected-event ibus-last-command-event
