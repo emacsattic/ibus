@@ -2133,10 +2133,6 @@ respectively."
 		(and (processp ibus-agent-process)
 		     (set-buffer (process-buffer ibus-agent-process))))
 	(let ((inhibit-modification-hooks t)
-	      ;; Inhibit all timers here, because `accept-process-output' cannot
-	      ;; do that by itself though it can ignore inputs from other processes.
-	      (timer-list nil)
-	      (timer-idle-list nil)
 	      (sec (and (floatp ibus-agent-timeout) ibus-agent-timeout))
 	      (msec (and (integerp ibus-agent-timeout) ibus-agent-timeout)))
 	  (when (= (point-max) 1)
