@@ -104,7 +104,8 @@ if __name__ == "__main__":
     options, args = parser.parse_args()
     if options.quit:
         start_ibus_daemon = False
-    if options.surrounding_text:
+    if options.surrounding_text \
+            and map(int, ibus.get_version().split(".")) >= [1, 4, 0]:
         use_surrounding_text = True
         print "Surrounding text support enabled"
 
