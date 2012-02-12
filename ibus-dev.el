@@ -1695,15 +1695,15 @@ respectively."
 
 (defun ibus-agent-start-focus-observation ()
   (setq ibus-focused-window-id nil)
+  (ibus-agent-send "start_focus_observation(%d)"
+		   (* ibus-focus-update-interval 1000))
   (let ((time-limit (+ (float-time)
 		       (or (and (floatp ibus-agent-timeout)
 				ibus-agent-timeout)
 			   (/ ibus-agent-timeout 1000.0)))))
-    (ibus-agent-send-receive "start_focus_observation(%d)"
-			     (* ibus-focus-update-interval 1000))
     (while (and (not (numberp ibus-focused-window-id))
 		(< (float-time) time-limit))
-      (ibus-agent-receive)))
+      (ibus-agent-receive nil nil t)))
   (unless (numberp ibus-focused-window-id)
     (ibus-mode-quit)
     (error "Couldn't detect input focus. Turned off ibus-mode.")))
@@ -2126,7 +2126,7 @@ respectively."
      (ibus-message "Couldn't send command to agent %S" err)
      nil))) ; Failed
 
-(defun ibus-agent-receive (&optional passive wait)
+(defun ibus-agent-receive (&optional passive wait noerror)
   (let (repl)
     (save-current-buffer
       (when (or passive
@@ -2167,7 +2167,8 @@ respectively."
 		(delq 'ibus-receive-event unread-command-events)))
 	(if repl
 	    (ibus-process-signals repl passive)
-	  (ibus-message "Couldn't receive data from agent."))))))
+	  (unless noerror
+	    (ibus-message "Couldn't receive data from agent.")))))))
 
 (defun ibus-agent-send-receive (string &rest objects)
   (and (apply 'ibus-agent-send string objects)
@@ -2525,10 +2526,12 @@ respectively."
 	  (ibus-agent-key-event-handled nil))
       (while (and (null ibus-agent-key-event-handled)
 		  (< (float-time) time-limit))
-	(ibus-agent-receive))
-      (when (and (car ibus-agent-key-event-handled)
-		 (not ibus-surrounding-text-modified)
-		 (not ibus-preediting-p))
+	(ibus-agent-receive nil nil t))
+      (if (or (not (car ibus-agent-key-event-handled))
+	      ibus-surrounding-text-modified
+	      ibus-preediting-p)
+	  (unless ibus-agent-key-event-handled
+	    (ibus-message "No response for the key event."))
 	;; Send cursor location for displaying candidate window without preedit
 	(let ((ibus-preedit-point (point)))
 	  (ibus-set-cursor-location))))))
@@ -2717,14 +2720,14 @@ respectively."
 	    ibus-buffer-group-alist (cons group ibus-buffer-group-alist)))
     (unless ibus-imcontext-id
       (setq ibus-imcontext-id 'RQ) ; Set symbol to avoid multiple request
+      (ibus-agent-send "create_imcontext()")
       (let ((time-limit (+ (float-time)
 			   (or (and (floatp ibus-agent-timeout)
 				    ibus-agent-timeout)
 			       (/ ibus-agent-timeout 1000.0)))))
-	(ibus-agent-send-receive "create_imcontext()")
 	(while (and (not (numberp ibus-imcontext-id))
 		    (< (float-time) time-limit))
-	  (ibus-agent-receive)))
+	  (ibus-agent-receive nil nil t)))
       (unless (numberp ibus-imcontext-id)
 	(ibus-mode-quit)
 	(error "Couldn't create imcontext. Turned off ibus-mode."))
