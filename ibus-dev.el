@@ -2233,7 +2233,8 @@ respectively."
 	(cond
 	 ((eq fun 'ibus-focus-changed-cb)
 	  (setq focus-changed sexp))
-	 ((and (symbolp fun)
+	 ((and (buffer-live-p ibus-current-buffer)
+	       (symbolp fun)
 	       (fboundp fun))
 	  (push sexp rsexplist)
 	  (if (and need-check
@@ -2244,6 +2245,11 @@ respectively."
 			       ibus-show-preedit-text-cb
 			       ibus-delete-surrounding-text-cb)))
 	      (setq resume-preedit t)))
+	 ((eq fun 'ibus-create-imcontext-cb)
+	  ;; `ibus-create-imcontext-cb' has to be executed even if the
+	  ;; buffer has been killed, because the IMContext needs sending
+	  ;; a request destroy_imcontext() to the IBus daemon
+	  (eval sexp))
 	 ((stringp sexp)
 	  (ibus-message "%s" sexp))
 	 (t
@@ -2722,12 +2728,20 @@ respectively."
       (unless (numberp ibus-imcontext-id)
 	(ibus-mode-quit)
 	(error "Couldn't create imcontext. Turned off ibus-mode."))
-      (setcdr group
-	      (list (cons (cons ibus-selected-display ibus-imcontext-id)
-			  (cadr group))
-		    (cons (cons ibus-selected-display ibus-imcontext-status)
-			  (nth 2 group))
-		    (nth 3 group)))
+      (if (buffer-live-p ibus-current-buffer)
+	  (setcdr group
+		  (list (cons (cons ibus-selected-display ibus-imcontext-id)
+			      (cadr group))
+			(cons (cons ibus-selected-display ibus-imcontext-status)
+			      (nth 2 group))
+			(nth 3 group)))
+	;; Destroy IMContext immediately if the buffer has been killed
+	;; before receiving its ID.  In this case, it's unnecessary to
+	;; call `ibus-destroy-imcontext' because the buffer already has
+	;; been deleted from `ibus-buffer-group-alist' in kill-buffer-hook.
+	(ibus-agent-send "destroy_imcontext(%d)" ibus-imcontext-id)
+	(setq ibus-imcontext-id nil)
+	(ibus-check-current-buffer))
       (ibus-cleanup-preedit))))
 
 (defun ibus-create-imcontext-cb (id)
@@ -2989,6 +3003,7 @@ ENGINE-NAME, if given as a string, specifies input method engine."
 	(ibus-update-cursor-color)))))
 
 (defun ibus-kill-buffer-function ()
+  (ibus-log "buffer has been killed: %s" (current-buffer))
   (ibus-destroy-imcontext))
 
 (defun ibus-exit-minibuffer-function ()
