@@ -3,11 +3,11 @@ Upstream-Name: ibus.el
 Source: https://launchpad.net/ibus.el
 
 Files: *
-Copyright: 2010-2011 IRIE Shinsuke <irieshinsuke@yahoo.co.jp>
+Copyright: 2010-2012 IRIE Shinsuke <irieshinsuke@yahoo.co.jp>
 License: GPL-3.0+
 
 Files: debian/*
-Copyright: 2010-2011 IRIE Shinsuke <irieshinsuke@yahoo.co.jp>
+Copyright: 2010-2012 IRIE Shinsuke <irieshinsuke@yahoo.co.jp>
 License: GPL-3.0+
 
 License: GPL-3.0+
