@@ -6,7 +6,7 @@
 
 # Author: S. Irie
 # Maintainer: S. Irie
-# Version: 0.3.0
+# Version: 0.3.1
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -39,6 +39,10 @@
 
 # ChangeLog:
 
+# 2012-02-14  S. Irie
+#         * Version 0.3.1
+#         * Bug fix
+#
 # 2011-12-24  S. Irie
 #         * Version 0.3.0
 #         * Add support for surrounding text
