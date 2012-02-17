@@ -1023,6 +1023,7 @@ use either \\[customize] or the function `ibus-mode'."
   (let ((log-str (concat (format-time-string "%T ")
 			 (apply 'format format-string args))))
     (with-current-buffer (get-buffer-create ibus-log-buffer)
+      (buffer-disable-undo)
       (let ((window (get-buffer-window (current-buffer))))
 	(save-selected-window
 	  (if window (select-window window))
