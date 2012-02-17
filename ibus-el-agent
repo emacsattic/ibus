@@ -243,7 +243,7 @@ except:
     print "Launch IBus daemon..."
     import os
     import time
-    if os.spawnlp(os.P_WAIT, "ibus-daemon", "ibus-daemon", "-d") == 0:
+    if os.spawnlp(os.P_WAIT, "ibus-daemon", "ibus-daemon", "-dx") == 0:
         for i in range(10):
             time.sleep(0.5)
             try:
