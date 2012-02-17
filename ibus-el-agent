@@ -171,8 +171,7 @@ class Frame(object):
         focus = self.display.get_input_focus().focus
         try:
             # get_input_focus() may return an integer 0 that query_tree()
-            # causes AttributeError when X session is going to logout,
-            # or it might return an bad window when using GNOME Shell.
+            # causes AttributeError when X session is going to logout.
             tree = focus.query_tree()
             # In Ubuntu's Unity desktop, get_input_focus() often returns root
             # window incorrectly after changing workspace.
@@ -184,7 +183,7 @@ class Frame(object):
                     focus.change_attributes(event_mask=Xlib.X.FocusChangeMask)
                     self.focus = focus
                 return True
-        except (AttributeError, Xlib.error.BadWindow):
+        except AttributeError:
             if sync:
                 print form % 0
             return True
