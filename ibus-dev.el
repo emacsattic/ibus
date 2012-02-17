@@ -467,36 +467,38 @@ data of the coordinates to ibus-daemon."
   "Advanced settings"
   :group 'ibus)
 
-(defcustom ibus-agent-file-name
-  (let ((dir-list `(,(file-name-directory load-file-name)
-		    "~/bin/"
-		    "/usr/local/bin/"
-		    "/usr/local/libexec/"
-		    "/usr/local/libexec/ibus-el/"
-		    "/usr/local/libexec/emacs-ibus/"
-		    "/usr/local/lib/ibus-el/"
-		    "/usr/local/lib/emacs-ibus/"
-		    "/usr/local/share/ibus-el/"
-		    "/usr/local/share/emacs-ibus/"
-		    "/usr/bin/"
-		    "/usr/libexec/"
-		    "/usr/libexec/ibus-el/"
-		    "/usr/libexec/emacs-ibus/"
-		    "/usr/lib/ibus-el/"
-		    "/usr/lib/emacs-ibus/"
-		    "/usr/share/ibus-el/"
-		    "/usr/share/emacs-ibus/"))
-	file-name)
-    (while dir-list
-      (setq file-name (concat (pop dir-list) "ibus-el-agent"))
-      (if (file-exists-p file-name)
-	  (setq dir-list nil)))
-    file-name)
-  "File name of the agent script used for communicating with
-ibus-daemon and X servers. If `ibus-python-shell-command-name' is
-nil, the agent is executed directly as a shell command so it must
-be executable."
+(defcustom ibus-agent-file-name "ibus-el-agent"
+  "File name of the helper script used for communicating with
+ibus-daemon and X servers. If the file name is given as a relative one,
+the script is searched in directories listed in `ibus-agent-search-paths'.
+If `ibus-python-shell-command-name' is nil, the script is executed
+directly as a shell command, so it must be executable."
   :type '(file :must-match t)
+  :group 'ibus-expert)
+
+(defcustom ibus-agent-search-paths
+  (cons (file-name-directory load-file-name)
+	'("~/bin"
+	  "/usr/local/bin"
+	  "/usr/local/libexec"
+	  "/usr/local/libexec/ibus-el"
+	  "/usr/local/libexec/emacs-ibus"
+	  "/usr/local/lib/ibus-el"
+	  "/usr/local/lib/emacs-ibus"
+	  "/usr/local/share/ibus-el"
+	  "/usr/local/share/emacs-ibus"
+	  "/usr/bin"
+	  "/usr/libexec"
+	  "/usr/libexec/ibus-el"
+	  "/usr/libexec/emacs-ibus"
+	  "/usr/lib/ibus-el"
+	  "/usr/lib/emacs-ibus"
+	  "/usr/share/ibus-el"
+	  "/usr/share/emacs-ibus"))
+  "List of directories to search for the helper script specified by
+`ibus-agent-file-name' (It's normally \"ibus-el-agent\"). Each element
+must be a string of absolute path."
+  :type '(repeat directory)
   :group 'ibus-expert)
 
 (defcustom ibus-python-shell-command-name "python"
@@ -2062,15 +2064,25 @@ respectively."
 		   (string-match "\\(\\**\\)$" ibus-agent-buffer-name)
 		   (replace-match (concat "(" display ")\\1")
 				  t nil ibus-agent-buffer-name)))
-	 (args '("-s"))) ; Enable surrounding text support
+	 (args '("-s")) ; Enable surrounding text support
+	 (file ibus-agent-file-name)
+	 (paths ibus-agent-search-paths))
     (unless (if (functionp ibus-agent-start-ibus-daemon)
 		(funcall ibus-agent-start-ibus-daemon)
 	      ibus-agent-start-ibus-daemon)
       (push "-q" args)) ; Quit if ibus-daemon is not running
+    (unless (file-name-absolute-p file)
+      (let (abs-file)
+	(while paths
+	  (setq abs-file (concat (pop paths) "/" file))
+	  (if (file-exists-p abs-file)
+	      (setq file abs-file
+		    paths nil)))))
+    (ibus-log "agent filename: %s" file)
     (if ibus-python-shell-command-name
 	(apply 'start-process "ibus-agent" buffer ibus-python-shell-command-name
-	       (expand-file-name ibus-agent-file-name) args)
-      (apply 'start-process "ibus-agent" buffer ibus-agent-file-name args))))
+	       (expand-file-name file) args)
+      (apply 'start-process "ibus-agent" buffer file args))))
 
 (defun ibus-agent-start ()
   (if (and (processp ibus-agent-process)
