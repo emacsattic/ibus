@@ -8,7 +8,7 @@
 ;; Maintainer: S. Irie
 ;; Keywords: Input Method, i18n
 
-(defconst ibus-mode-version "0.3.1")
+(defconst ibus-mode-version "0.3.2")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -93,6 +93,10 @@
 ;;
 
 ;;; History:
+;; 2012-02-29  S. Irie
+;;         * Version 0.3.2
+;;         * Added option `ibus-agent-search-paths'
+;;
 ;; 2012-02-14  S. Irie
 ;;         * Version 0.3.1
 ;;         * Bug fixes
