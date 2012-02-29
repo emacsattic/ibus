@@ -19,8 +19,9 @@ DEBUILD="no"
 BLDTYPE="deb"
 NATIVE="yes"
 BLDFLAGS=""
+SIGN="no"
 
-while getopts :hcbSpnu OPTION
+while getopts :hcbSpnus OPTION
 do
     case $OPTION in
 	h)
@@ -31,6 +32,7 @@ do
 	    echo "  -p  build deb package using pbuilder"
 	    echo "  -n  build deb package as a non-native one"
 	    echo "  -u  add -us -uc options to debuild"
+	    echo "  -s  create a digital signature"
 	    echo "  -h  display this help and exit"
 	    exit
 	    ;;
@@ -63,6 +65,9 @@ do
 	    ;;
 	u)
 	    BLDFLAGS="${BLDFLAGS} -us -uc"
+	    ;;
+	s)
+	    SIGN="yes"
 	    ;;
 	?)
 	    echo "$0: invalid option -- $OPTARG" >&2
@@ -121,6 +126,15 @@ echo "create archive $ARCHFILE"
 cd $WORKDIR
 tar cvzf $(basename $ARCHFILE) $(basename $ARCHDIR)
 cd $CURRDIR
+
+
+# Create a digital signature ===========
+
+if [ "$SIGN" == "yes" ]; then
+    cd $WORKDIR
+    gpg --armor --sign --detach-sig $(basename $ARCHFILE)
+    cd $CURRDIR
+fi
 
 
 # Build deb package  ===================
