@@ -1,3 +1,11 @@
+	* Version0.3.2
+	* Added option `ibus-agent-search-paths' to fix problem that ibus-el-agent
+	cannot be found automatically if it has been moved to another directory
+	after loading ibus.el
+	* Fixed problem: Message of Xlib's BadWindow error sometimes is displayed
+	in particular environments (LP #932517)
+	* Changed command line options for ibus-daemon automatically launched
+	to start XIM server together ("-d" -> "-dx")
 2012-02-14  IRIE Shinsuke <irieshinsuke@yahoo.co.jp>
 	* Version0.3.1
 	* Fixed bug: An error occurs when using old version of IBus (< 1.4.0) which
