@@ -435,6 +435,12 @@ def process_key_event(id_no, keyval, modmask, backslash, pressed = None):
         return False
 
     ic = imcontexts[id_no]
+
+    # old ibus does not have "use_surrounding_text" method.
+    if use_surrounding_text and not hasattr(ic, "use_surrounding_text"):
+        global use_surrounding_text
+        use_surrounding_text = False
+
     if use_surrounding_text and pressed != False \
             and ic.needs_surrounding_text() and not ic.surrouding_text_received:
         print '(ibus-query-surrounding-text-cb %d %d ?\\x%x "%s" "%s")'% \
